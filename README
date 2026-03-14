@@ -1,0 +1,502 @@
+# Healthcare Workforce Management Platform
+
+**System Definition & Feature Specification**
+
+This document defines the **complete functionality, modules, roles, and features** of the Healthcare Workforce Management Platform based on the SRS.
+
+The system is designed to help healthcare organizations manage **staff scheduling, workforce operations, compliance, and workforce analytics**.
+
+---
+
+# 1. System Overview
+
+The Healthcare Workforce Management Platform enables hospitals and healthcare facilities to:
+
+* Manage healthcare staff
+* Schedule shifts efficiently
+* Track attendance and working hours
+* Ensure credential compliance
+* Manage shift swaps and time-off requests
+* Monitor workforce analytics
+* Maintain staffing ratios and operational efficiency
+
+The platform supports **role-based access control (RBAC)**.
+
+---
+
+# 2. System Roles
+
+The system has **three primary roles**.
+
+## 2.1 Admin
+
+Admin users have **full system control**.
+
+### Responsibilities
+
+* Manage users and staff
+* Configure departments and units
+* Monitor workforce analytics
+* Manage compliance rules
+* Manage credentials and policies
+* Configure system settings
+
+### Admin Features
+
+* Create staff accounts
+* Update staff profiles
+* Assign staff roles
+* Manage departments
+* Manage units
+* View workforce analytics
+* Monitor staffing ratios
+* Manage credential requirements
+* Manage system settings
+* View system-wide reports
+
+---
+
+## 2.2 Manager
+
+Managers oversee **staff operations within their department or unit**.
+
+### Responsibilities
+
+* Manage schedules
+* Assign shifts
+* Monitor attendance
+* Approve requests
+* Ensure staffing coverage
+
+### Manager Features
+
+* View department staff directory
+* Create shift schedules
+* Assign staff to shifts
+* Approve shift swaps
+* Approve time-off requests
+* Monitor staff attendance
+* Monitor overtime
+* View department analytics
+
+---
+
+## 2.3 Staff
+
+Staff users include **nurses, doctors, technicians, and healthcare workers**.
+
+### Responsibilities
+
+* View schedules
+* Track work hours
+* Request shift swaps
+* Submit time-off requests
+
+### Staff Features
+
+* View assigned shifts
+* Clock in and clock out
+* Submit shift swap requests
+* Submit time-off requests
+* View personal profile
+* Upload credentials
+* Update availability
+
+---
+
+# 3. System Modules
+
+The system is divided into several **functional modules**.
+
+---
+
+# 4. Authentication & Authorization Module
+
+This module manages **user login and role-based access**.
+
+## Features
+
+* Email/password login
+* Supabase authentication
+* Role-based access control
+* Session management
+* Secure route protection
+* Automatic dashboard redirection
+
+## Dashboard Redirection
+
+Admin → `/dashboard/admin`
+Manager → `/dashboard/manager`
+Staff → `/dashboard/staff`
+
+---
+
+# 5. Staff Management Module
+
+This module manages **healthcare staff profiles and professional information**.
+
+## Features
+
+* Staff directory
+* Staff profile management
+* Skills tracking
+* Credential management
+* Department assignment
+* Contact information management
+* Availability scheduling
+
+## Staff Directory
+
+The directory includes:
+
+* Name
+* Role
+* Department
+* Employment type
+* Status
+
+Features:
+
+* Search
+* Filter by department
+* Filter by role
+* Pagination
+
+## Staff Profile
+
+Each staff member has a profile containing:
+
+Personal Information
+
+* Name
+* Email
+* Phone
+
+Professional Information
+
+* Role
+* Department
+* Unit
+* Skills
+
+Credentials
+
+* Certifications
+* License expiration
+
+Availability
+
+* Weekly availability schedule
+
+---
+
+# 6. Department & Unit Management Module
+
+Healthcare organizations operate with **multiple departments and units**.
+
+Examples:
+
+* Emergency
+* ICU
+* Surgery
+* Pediatrics
+
+## Features
+
+* Create departments
+* Create hospital units
+* Assign staff to departments
+* Assign staff to units
+* Manage department hierarchy
+
+---
+
+# 7. Shift Scheduling Module
+
+This module manages **staff shift scheduling**.
+
+## Features
+
+* Create shifts
+* Assign staff to shifts
+* Manage schedule calendar
+* Track open shifts
+* Update schedules
+* Real-time schedule updates
+
+## Shift Information
+
+Each shift includes:
+
+* Start time
+* End time
+* Department
+* Assigned staff
+* Shift status
+
+---
+
+# 8. Shift Swap Module
+
+Allows staff to **exchange shifts with other staff members**.
+
+## Features
+
+* Request shift swap
+* Accept swap request
+* Manager approval
+* Track swap status
+
+## Swap Workflow
+
+1. Staff requests swap
+2. Another staff accepts
+3. Manager approves
+
+---
+
+# 9. Time Tracking Module
+
+This module tracks **staff working hours and attendance**.
+
+## Features
+
+* Clock in
+* Clock out
+* Break tracking
+* Overtime calculation
+* Work history
+
+## Time Entry Data
+
+* Clock in time
+* Clock out time
+* Break duration
+* Overtime hours
+
+---
+
+# 10. Time-Off Request Module
+
+Staff can request **leave or vacation**.
+
+## Features
+
+* Submit PTO request
+* Submit sick leave request
+* Track request status
+* Manager approval workflow
+
+## Request Status
+
+* Pending
+* Approved
+* Rejected
+
+---
+
+# 11. Credential & License Tracking Module
+
+Healthcare workers require **valid certifications and licenses**.
+
+## Features
+
+* Store certification records
+* Upload documents
+* Track expiration dates
+* Send expiration alerts
+
+## Examples
+
+* Nursing License
+* CPR Certification
+* Medical License
+
+---
+
+# 12. Notification System
+
+The platform sends **system notifications** to users.
+
+## Notification Types
+
+* Schedule updates
+* Shift swap approvals
+* Time-off approvals
+* Credential expiration alerts
+
+Notifications can appear as:
+
+* In-app notifications
+* Toast alerts
+
+---
+
+# 13. Manager Dashboard Module
+
+Managers have a **department-level dashboard**.
+
+## Dashboard Metrics
+
+* Department staff count
+* Open shifts
+* Pending approvals
+* Overtime hours
+* Shift coverage
+
+---
+
+# 14. Admin Dashboard Module
+
+Admin dashboard provides **organization-wide analytics**.
+
+## Dashboard Metrics
+
+* Total staff
+* Departments overview
+* Credential expiration alerts
+* Staffing compliance
+* Workforce utilization
+* Overtime analytics
+
+---
+
+# 15. Staff Dashboard Module
+
+Staff dashboard shows **personal workforce information**.
+
+## Dashboard Widgets
+
+* Upcoming shifts
+* Work hours
+* Credentials
+* Shift swap requests
+* Time-off requests
+
+---
+
+# 16. Reporting & Analytics Module
+
+Provides workforce insights.
+
+## Reports
+
+* Staff utilization
+* Overtime analysis
+* Shift coverage
+* Credential compliance
+* Department workforce metrics
+
+---
+
+# 17. Core Database Entities
+
+The system includes the following main entities:
+
+* Users
+* Staff
+* Departments
+* Units
+* Skills
+* Credentials
+* Staff Skills
+* Staff Credentials
+* Availability
+* Shifts
+* Shift Assignments
+* Time Entries
+* Time-Off Requests
+* Shift Swap Requests
+* Notifications
+
+---
+
+# 18. System Architecture
+
+Technology Stack
+
+Frontend
+
+* Next.js
+* TypeScript
+* TailwindCSS
+* ShadCN UI
+
+Backend
+
+* Supabase
+* PostgreSQL
+* Supabase Auth
+* Supabase Storage
+
+Forms
+
+* React Hook Form
+* Zod validation
+
+Notifications
+
+* Sonner toast
+
+---
+
+# 19. Security
+
+The system uses **Role-Based Access Control (RBAC)**.
+
+Access Rules
+
+Admin
+
+* Full access
+
+Manager
+
+* Department-level access
+
+Staff
+
+* Access to personal data only
+
+Row Level Security (RLS) is implemented in Supabase.
+
+---
+
+# 20. MVP Scope
+
+The first version of the system includes:
+
+* Authentication
+* Staff management
+* Department management
+* Shift scheduling
+* Time tracking
+* Shift swap requests
+* Time-off requests
+* Manager dashboard
+
+---
+
+# 21. Future Enhancements
+
+Possible advanced features:
+
+* AI shift scheduling
+* Predictive staffing
+* Staff burnout analytics
+* Mobile workforce app
+* AI staffing recommendations
+
+---
+
+# 22. Conclusion
+
+This platform provides a **complete workforce management solution for healthcare organizations**.
+
+Key benefits:
+
+* Efficient workforce scheduling
+* Compliance with healthcare regulations
+* Reduced overtime costs
+* Improved staff satisfaction
+* Better operational visibility
