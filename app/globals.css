@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f4f7fb;
+  --surface: #ffffff;
+  --surface-muted: #ecf1f8;
+  --border: #e5e9f0;
+  --text: #0f172a;
+  --muted: #6b7280;
+  --brand-50: #e8f1ff;
+  --brand-100: #d2e3ff;
+  --brand-200: #a6c6ff;
+  --brand-300: #7ba9f6;
+  --brand-400: #4c8de8;
+  --brand-500: #1f75e5;
+  --brand-600: #115ec3;
+  --brand-700: #0b4c9c;
+  --brand-800: #083a76;
+}
+
+body {
+  background: radial-gradient(circle at 0% 0%, rgba(17, 94, 195, 0.08), transparent 30%),
+    radial-gradient(circle at 80% 20%, rgba(79, 139, 232, 0.08), transparent 25%),
+    var(--background);
+  color: var(--text);
+  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.bg-muted {
+  background-color: var(--surface-muted);
+}
+
+.bg-skeleton {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.7) 0%,
+    rgba(226, 232, 240, 0.35) 50%,
+    rgba(226, 232, 240, 0.7) 100%
+  );
+  background-size: 200% 100%;
+}
+
+.text-text {
+  color: var(--text);
+}
+
+.shadow-xs {
+  box-shadow: 0 6px 12px rgba(15, 23, 42, 0.04);
+}
