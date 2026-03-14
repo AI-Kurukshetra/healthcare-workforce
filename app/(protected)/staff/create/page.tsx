@@ -9,7 +9,8 @@ export const dynamic = "force-dynamic";
 export default async function CreateStaffPage() {
   const ctx = await getSessionWithRole();
   const role = ctx?.role ?? "staff";
-  const allowedRoles = role === "manager" ? ["staff"] : ["staff", "manager", "admin"];
+  const allowedRoles: ("admin" | "manager" | "staff")[] =
+    role === "manager" ? ["staff"] : ["staff", "manager", "admin"];
   const defaultDepartmentId = role === "manager" ? ctx?.departmentId ?? "" : "";
 
   const departments = await listDepartments();

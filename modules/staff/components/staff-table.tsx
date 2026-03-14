@@ -62,34 +62,36 @@ export default function StaffTable({ data, canManage }: StaffTableProps) {
         </span>
       ),
     },
-    canManage
-      ? {
-          id: "actions",
-          header: "Actions",
-          cell: ({ row }) => (
-            <div className="flex items-center gap-2">
-              <Link href={`/staff/${row.original.id}`}>
-                <Button variant="outline" className="h-8 w-8 p-0" title="View Profile">
-                  <Eye className="h-4 w-4" />
+    ...(canManage
+      ? [
+          {
+            id: "actions",
+            header: "Actions",
+            cell: ({ row }: { row: { original: StaffListItem } }) => (
+              <div className="flex items-center gap-2">
+                <Link href={`/staff/${row.original.id}`}>
+                  <Button variant="outline" className="h-8 w-8 p-0" title="View Profile">
+                    <Eye className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link href={`/staff/edit/${row.original.id}`}>
+                  <Button variant="outline" className="h-8 w-8 p-0" title="Edit">
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Button
+                  variant="outline"
+                  className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                  title="Deactivate"
+                  onClick={() => setDeactivateId(row.original.id)}
+                >
+                  <UserX className="h-4 w-4" />
                 </Button>
-              </Link>
-              <Link href={`/staff/edit/${row.original.id}`}>
-                <Button variant="outline" className="h-8 w-8 p-0" title="Edit">
-                  <Edit className="h-4 w-4" />
-                </Button>
-              </Link>
-              <Button
-                variant="outline"
-                className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                title="Deactivate"
-                onClick={() => setDeactivateId(row.original.id)}
-              >
-                <UserX className="h-4 w-4" />
-              </Button>
-            </div>
-          ),
-        }
-      : null,
+              </div>
+            ),
+          } satisfies ColumnDef<StaffListItem>,
+        ]
+      : []),
   ];
 
   return (

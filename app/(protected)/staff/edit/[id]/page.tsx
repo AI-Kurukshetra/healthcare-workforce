@@ -28,7 +28,8 @@ export default async function EditStaffPage({ params }: { params: { id: string }
     );
   }
 
-  const allowedRoles = role === "manager" ? ["staff"] : ["staff", "manager", "admin"];
+  const allowedRoles: ("admin" | "manager" | "staff")[] =
+    role === "manager" ? ["staff"] : ["staff", "manager", "admin"];
   const lockDepartment = role === "manager";
   const defaultDepartmentId = lockDepartment ? managerDept ?? "" : staffUser.departmentId ?? "";
 
