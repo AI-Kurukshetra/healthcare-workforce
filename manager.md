@@ -10,6 +10,17 @@ Managers have **department-level permissions**, but not full system control.
 
 ---
 
+## Manager–Staff Connection
+
+Managers and staff are linked by **department**. Both have a `department_id` on their profile:
+
+* **Manager**: User with role `manager` and a `department_id` (the department they manage).
+* **Staff**: User with role `staff` and a `department_id` (the department they belong to).
+
+A manager **only sees and approves** requests for staff in the **same department** as their own `department_id`. There is no separate "reports to" or "manager_id" field — the relationship is **same department**. Admins can approve across all departments.
+
+---
+
 # Manager Dashboard
 
 The Manager dashboard shows **department workforce metrics**.

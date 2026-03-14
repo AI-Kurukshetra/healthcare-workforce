@@ -8,6 +8,13 @@ Admins manage **users, departments, system settings, and organization-wide analy
 
 ---
 
+## Who Approves What
+
+* **Time-off and shift-swap requests** are normally approved by the **manager of the staff’s department** (manager and staff share the same `department_id`).
+* **Admins** can approve any request across all departments. Managers can approve only for staff in their own department.
+
+---
+
 # Admin Dashboard
 
 The Admin dashboard shows **system-wide workforce metrics**.

@@ -10,5 +10,6 @@ const ROLE_HOME: Record<"admin" | "manager" | "staff", string> = {
 export default async function DashboardIndex() {
   const session = await getSessionWithRole();
   if (!session) redirect("/signin");
-  redirect(ROLE_HOME[(session.role as any) ?? "staff"]);
+  const roleKey = (session.role ?? "staff") as keyof typeof ROLE_HOME;
+  redirect(ROLE_HOME[roleKey] ?? ROLE_HOME.staff);
 }

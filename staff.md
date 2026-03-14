@@ -10,6 +10,12 @@ They do **not have administrative or managerial permissions**.
 
 ---
 
+## Manager–Staff Connection
+
+Staff are linked to their approvers by **department**. Each staff profile has a `department_id`. The **manager** who approves your time-off, shift swaps, etc. is any user with role `manager` in the **same department** (same `department_id`). There is no separate "my manager" field — approval authority is determined by department. Admins can approve across all departments.
+
+---
+
 # Staff Dashboard
 
 The Staff dashboard displays **personal workforce information**.
