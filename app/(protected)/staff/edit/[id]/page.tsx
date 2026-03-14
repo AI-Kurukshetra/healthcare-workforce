@@ -3,6 +3,7 @@ import { getStaffById } from "@/modules/staff/queries";
 import StaffForm from "@/modules/staff/components/staff-form";
 import { PageHeader } from "@/components/ui/page-header";
 import { notFound } from "next/navigation";
+import RoleGuard from "@/components/auth/role-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -17,13 +18,15 @@ export default async function EditStaffPage({ params }: { params: { id: string }
   }
 
   return (
-    <div className="space-y-6">
-      <PageHeader
-        badge="Directory"
-        title="Edit Staff Member"
-        description="Update staff profile and assignments."
-      />
-      <StaffForm departments={departments} initialData={staffUser} />
-    </div>
+    <RoleGuard roles={["admin"]}>
+      <div className="space-y-6">
+        <PageHeader
+          badge="Directory"
+          title="Edit Staff Member"
+          description="Update staff profile and assignments."
+        />
+        <StaffForm departments={departments} initialData={staffUser} />
+      </div>
+    </RoleGuard>
   );
 }

@@ -1,21 +1,45 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import dayjs from "dayjs";
+import { getSessionWithRole } from "@/modules/auth/queries";
 
-async function loadRequests() {
+type Scope = "self" | "team" | "all";
+
+async function loadRequests(scope: Scope) {
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (scope === "self" && !user?.id) return [];
+
+  let query = supabase
     .from("time_off_requests")
-    .select("id, start_date, end_date, status, type")
+    .select("id, start_date, end_date, status, type, staff_id, profiles:staff_id(department_id)")
     .order("created_at", { ascending: false })
     .limit(50);
+
+  if (scope === "self" && user?.id) {
+    query = query.eq("staff_id", user.id);
+  }
+
+  if (scope === "team") {
+    const ctx = await getSessionWithRole();
+    if (ctx?.departmentId) {
+      query = query.eq("profiles.department_id", ctx.departmentId);
+    }
+  }
+
+  // For "team" scope we rely on RLS to restrict rows to the manager's department.
+
+  const { data, error } = await query;
   if (error) throw error;
   return data ?? [];
 }
 
-export default async function TimeOffTable() {
+export default async function TimeOffTable({ scope = "self" }: { scope?: Scope }) {
   let rows: Awaited<ReturnType<typeof loadRequests>> = [];
   try {
-    rows = await loadRequests();
+    rows = await loadRequests(scope);
   } catch (error) {
     console.error("timeoff table failed", error);
     return (

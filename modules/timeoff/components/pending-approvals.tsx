@@ -1,15 +1,24 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import dayjs from "dayjs";
+import { getSessionWithRole } from "@/modules/auth/queries";
 
 async function loadPending() {
   try {
     const supabase = createSupabaseServerClient();
-    const { data, error } = await supabase
+    const ctx = await getSessionWithRole();
+
+    let query = supabase
       .from("time_off_requests")
-      .select("id, start_date, end_date, type, staff_id")
+      .select("id, start_date, end_date, type, staff_id, profiles:staff_id(department_id)")
       .eq("status", "pending")
       .order("created_at", { ascending: true })
       .limit(5);
+
+    if (ctx?.role === "manager" && ctx.departmentId) {
+      query = query.eq("profiles.department_id", ctx.departmentId);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data ?? [];
   } catch (error) {

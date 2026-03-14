@@ -1,0 +1,393 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .wrap { padding: 16px 0; }
+  .tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+  .tab { padding: 7px 16px; border-radius: var(--border-radius-md); font-size: 13px; font-weight: 500; cursor: pointer; border: 1.5px solid var(--color-border-secondary); color: var(--color-text-secondary); background: var(--color-background-secondary); transition: all .15s; }
+  .tab.active { color: var(--color-text-primary); border-color: var(--color-border-primary); background: var(--color-background-primary); box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .tab:hover:not(.active) { border-color: var(--color-border-primary); color: var(--color-text-primary); }
+  .role-badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; margin-bottom: 16px; }
+  .section { margin-bottom: 20px; }
+  .section-title { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; color: var(--color-text-tertiary); margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--color-border-tertiary); }
+  .feature-list { display: flex; flex-direction: column; gap: 6px; }
+  .feature { display: flex; align-items: flex-start; gap: 10px; padding: 10px 12px; border-radius: var(--border-radius-md); border: 1px solid var(--color-border-tertiary); background: var(--color-background-secondary); cursor: pointer; transition: border-color .15s; }
+  .feature:hover { border-color: var(--color-border-secondary); }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+  .feature-name { font-size: 13px; font-weight: 500; color: var(--color-text-primary); line-height: 1.4; }
+  .feature-desc { font-size: 12px; color: var(--color-text-secondary); line-height: 1.5; margin-top: 2px; }
+  .perm { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 500; margin-top: 4px; }
+  .perm.full { background: #EAF3DE; color: #3B6D11; }
+  .perm.view { background: #E6F1FB; color: #185FA5; }
+  .perm.limited { background: #FAEEDA; color: #854F0B; }
+  @media (prefers-color-scheme: dark) {
+    .perm.full { background: #27500A; color: #C0DD97; }
+    .perm.view { background: #0C447C; color: #B5D4F4; }
+    .perm.limited { background: #633806; color: #FAC775; }
+  }
+  .count { font-size: 11px; color: var(--color-text-tertiary); margin-bottom: 14px; }
+  .legend { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .leg { display: flex; align-items: center; gap: 5px; font-size: 11px; color: var(--color-text-secondary); }
+</style>
+<div class="wrap">
+  <div class="tabs" id="tabs"></div>
+  <div class="legend">
+    <div class="leg"><span class="perm full">Full Access</span> Create, edit, delete, approve</div>
+    <div class="leg"><span class="perm view">View Only</span> Read access</div>
+    <div class="leg"><span class="perm limited">Limited</span> Own data only</div>
+  </div>
+  <div id="content"></div>
+</div>
+<script>
+const roles = [
+  {
+    id: 'staff',
+    label: 'Staff',
+    color: '#185FA5',
+    bg: '#E6F1FB',
+    darkColor: '#B5D4F4',
+    darkBg: '#0C447C',
+    dot: '#378ADD',
+    desc: 'Nurses, CNAs, Techs, Per Diem, Contract staff',
+    sections: [
+      {
+        title: 'Schedule & Shifts',
+        features: [
+          { name: 'My Schedule', desc: 'View personal schedule (month/week/day)', perm: 'view' },
+          { name: 'Shift Details', desc: 'View shift info, department, team members on shift', perm: 'view' },
+          { name: 'Shift Swap Requests', desc: 'Request to swap a shift with a colleague or post to swap board', perm: 'limited' },
+          { name: 'Open Shifts Board', desc: 'Browse and claim available open shifts', perm: 'limited' },
+          { name: 'Shift Notifications', desc: 'Receive push/in-app notifications for schedule changes', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Time & Attendance',
+        features: [
+          { name: 'Clock In / Out', desc: 'Tap to clock in/out with geolocation capture', perm: 'limited' },
+          { name: 'Break Tracking', desc: 'Start and end meal and rest breaks', perm: 'limited' },
+          { name: 'My Timesheets', desc: 'View personal time entries and weekly hours', perm: 'view' },
+          { name: 'Time-Off Requests', desc: 'Submit PTO, sick, vacation, FMLA requests', perm: 'limited' },
+          { name: 'PTO Balance', desc: 'View available hours by leave type', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Profile & Credentials',
+        features: [
+          { name: 'My Profile', desc: 'Edit personal info, contact details, availability preferences', perm: 'limited' },
+          { name: 'My Credentials', desc: 'View personal credential status and upload documents', perm: 'limited' },
+          { name: 'Expiry Alerts', desc: 'Receive alerts when credentials are expiring', perm: 'view' },
+          { name: 'My Skills', desc: 'View personal skills and upcoming assessments', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Communication',
+        features: [
+          { name: 'Handoff Notes', desc: 'Write end-of-shift handoff notes and acknowledge incoming notes', perm: 'limited' },
+          { name: 'Announcements', desc: 'Read department and facility announcements', perm: 'view' },
+          { name: 'Notifications', desc: 'View all notifications in personal feed', perm: 'view' },
+          { name: 'Emergency Response', desc: 'Respond to emergency callouts (available/unavailable/on way)', perm: 'limited' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'charge',
+    label: 'Charge Nurse',
+    color: '#3B6D11',
+    bg: '#EAF3DE',
+    darkColor: '#C0DD97',
+    darkBg: '#27500A',
+    dot: '#639922',
+    desc: 'Shift leads, charge nurses managing day-to-day unit operations',
+    sections: [
+      {
+        title: 'Schedule & Shifts',
+        features: [
+          { name: 'Daily Schedule View', desc: 'View full unit schedule for current and upcoming shifts', perm: 'view' },
+          { name: 'Open Shift Posting', desc: 'Post open shifts for the unit when coverage is needed', perm: 'full' },
+          { name: 'Shift Swap Approval', desc: 'Approve or reject swap requests within the unit', perm: 'full' },
+          { name: 'Float Request', desc: 'Request float pool staff to cover unit needs', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Census & Acuity',
+        features: [
+          { name: 'Census Input', desc: 'Enter patient census count per shift', perm: 'full' },
+          { name: 'Acuity Scoring', desc: 'Record patient acuity scores and view staffing recommendations', perm: 'full' },
+          { name: 'Real-time Staffing Ratio', desc: 'See current compliance status vs required ratios', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Communication',
+        features: [
+          { name: 'Handoff Board', desc: 'Manage and oversee all handoff notes for the unit', perm: 'full' },
+          { name: 'Unit Announcements', desc: 'Post announcements for the unit', perm: 'full' },
+          { name: 'Staff Contact', desc: 'Access staff directory to contact team members', perm: 'view' },
+        ]
+      },
+      {
+        title: 'All Staff Permissions',
+        features: [
+          { name: 'Inherits all Staff features', desc: 'Clock in/out, own schedule, time-off, credentials, notifications', perm: 'limited' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'manager',
+    label: 'Manager',
+    color: '#854F0B',
+    bg: '#FAEEDA',
+    darkColor: '#FAC775',
+    darkBg: '#633806',
+    dot: '#BA7517',
+    desc: 'Department managers, supervisors managing scheduling and approvals',
+    sections: [
+      {
+        title: 'Staff Management',
+        features: [
+          { name: 'Staff Directory', desc: 'View, search, and filter all staff in department', perm: 'view' },
+          { name: 'Staff Profiles', desc: 'Edit staff profiles, availability, and employment details', perm: 'full' },
+          { name: 'Staff Onboarding', desc: 'Add new staff members, assign roles and department', perm: 'full' },
+          { name: 'Skills Matrix', desc: 'View and record competency assessments for department staff', perm: 'full' },
+          { name: 'Staff Import/Export', desc: 'Bulk import staff via CSV, export directory', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Scheduling',
+        features: [
+          { name: 'Schedule Builder', desc: 'Create, edit, and publish schedules with drag-and-drop', perm: 'full' },
+          { name: 'Schedule Templates', desc: 'Save and apply skeleton schedule templates', perm: 'full' },
+          { name: 'Open Shifts Management', desc: 'Post, edit, and close open shifts', perm: 'full' },
+          { name: 'Swap Approval', desc: 'Review and approve/reject all shift swap requests', perm: 'full' },
+          { name: 'Float Pool Assignment', desc: 'Assign float staff to units based on skill match', perm: 'full' },
+          { name: 'Contract Staff Scheduling', desc: 'Schedule per diem and contract/agency staff', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Time & Attendance',
+        features: [
+          { name: 'Timesheet Approval', desc: 'Review, edit, and approve timesheets before payroll', perm: 'full' },
+          { name: 'Time Entry Edits', desc: 'Correct time entries with full audit trail', perm: 'full' },
+          { name: 'Overtime Approval', desc: 'Authorize overtime with reason before/after the fact', perm: 'full' },
+          { name: 'Time-Off Approval', desc: 'Approve or reject PTO/sick/vacation requests', perm: 'full' },
+          { name: 'Overtime Dashboard', desc: 'View running OT cost vs budget for department', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Compliance',
+        features: [
+          { name: 'Staffing Ratio Monitor', desc: 'View real-time compliance for all units', perm: 'view' },
+          { name: 'Credential Dashboard', desc: 'View compliance % and expiring credentials for department', perm: 'full' },
+          { name: 'Credential Verification', desc: 'Verify uploaded staff credentials', perm: 'full' },
+          { name: 'Union Rule Alerts', desc: 'See scheduling violations flagged against union rules', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Analytics & Budget',
+        features: [
+          { name: 'Manager Dashboard', desc: 'KPIs, staffing status, pending actions, activity feed', perm: 'full' },
+          { name: 'Department Reports', desc: 'Run staffing, overtime, attendance, credential reports', perm: 'full' },
+          { name: 'Budget Tracking', desc: 'View actual vs budgeted hours and labor cost', perm: 'view' },
+          { name: 'Payroll Export', desc: 'Export approved timesheets to payroll format', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Inherits All Lower Roles',
+        features: [
+          { name: 'All Staff + Charge Nurse features', desc: 'Clock in/out, own schedule, census entry, unit announcements', perm: 'limited' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'director',
+    label: 'Director',
+    color: '#533AB7',
+    bg: '#EEEDFE',
+    darkColor: '#AFA9EC',
+    darkBg: '#3C3489',
+    dot: '#7F77DD',
+    desc: 'Nursing directors, department directors managing multiple units',
+    sections: [
+      {
+        title: 'Cross-Department Access',
+        features: [
+          { name: 'Multi-Department Schedule View', desc: 'View and manage schedules across all assigned departments', perm: 'full' },
+          { name: 'Cross-Unit Float Management', desc: 'Approve float assignments across departments', perm: 'full' },
+          { name: 'Department Comparison', desc: 'Compare staffing levels, OT, and compliance across units', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Compliance & Credentialing',
+        features: [
+          { name: 'Compliance Dashboard', desc: 'Staffing ratio compliance across all managed departments', perm: 'full' },
+          { name: 'Staffing Ratio Config', desc: 'Define and edit minimum staffing ratio requirements', perm: 'full' },
+          { name: 'Union Contract Rules', desc: 'Configure and manage union rule sets', perm: 'full' },
+          { name: 'Credential Compliance', desc: 'Manage credential types and required credentials per role', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Budget & Planning',
+        features: [
+          { name: 'Budget Planning', desc: 'Create and manage annual/quarterly staffing budgets', perm: 'full' },
+          { name: 'Labor Forecasting', desc: 'Run what-if scenarios to model FTE changes', perm: 'full' },
+          { name: 'Variance Reports', desc: 'Analyze budget vs actual with drill-down by role/shift type', perm: 'full' },
+          { name: 'Agency vs Internal Cost', desc: 'Compare contract staff costs to internal equivalents', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Emergency & Crisis',
+        features: [
+          { name: 'Declare Emergency', desc: 'Initiate emergency events and broadcast to staff', perm: 'full' },
+          { name: 'Emergency Response Board', desc: 'Real-time view of staff responses', perm: 'full' },
+          { name: 'Emergency Scheduling', desc: 'Rapid assignment of responding staff to shifts', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Inherits All Manager Permissions',
+        features: [
+          { name: 'All Manager features', desc: 'Schedule builder, timesheet approval, reports, credential verification', perm: 'full' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'admin',
+    label: 'Admin',
+    color: '#0F6E56',
+    bg: '#E1F5EE',
+    darkColor: '#5DCAA5',
+    darkBg: '#085041',
+    dot: '#1D9E75',
+    desc: 'System administrators, HR, payroll administrators',
+    sections: [
+      {
+        title: 'Organization Settings',
+        features: [
+          { name: 'Organization Config', desc: 'Edit org name, timezone, policies, and global settings', perm: 'full' },
+          { name: 'Facility Management', desc: 'Create, edit, and archive facilities/locations', perm: 'full' },
+          { name: 'Department Management', desc: 'Manage full department hierarchy across all facilities', perm: 'full' },
+          { name: 'Shift Templates', desc: 'Create and manage org-wide shift templates', perm: 'full' },
+        ]
+      },
+      {
+        title: 'User & Role Management',
+        features: [
+          { name: 'User Accounts', desc: 'Create, deactivate, and manage all user accounts', perm: 'full' },
+          { name: 'Role Assignment', desc: 'Assign and change user roles and permissions', perm: 'full' },
+          { name: 'Staff Bulk Import', desc: 'Import and manage staff records org-wide', perm: 'full' },
+          { name: 'Password & Auth', desc: 'Reset passwords, manage auth settings, SSO config', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Compliance & Credentials',
+        features: [
+          { name: 'Credential Types', desc: 'Define required credential types per role org-wide', perm: 'full' },
+          { name: 'Credential Verification', desc: 'Verify, approve, or reject all staff credentials', perm: 'full' },
+          { name: 'Union Contracts', desc: 'Upload and configure union contract documents and rules', perm: 'full' },
+          { name: 'Staffing Ratios', desc: 'Configure staffing ratio requirements for all departments', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Payroll & Integrations',
+        features: [
+          { name: 'Pay Code Mapping', desc: 'Configure pay code mapping for payroll systems', perm: 'full' },
+          { name: 'Payroll Export Config', desc: 'Set payroll period, format, and integration webhooks', perm: 'full' },
+          { name: 'Export History', desc: 'View all past payroll exports and re-download', perm: 'full' },
+          { name: 'Integration Settings', desc: 'Manage API keys and third-party system connections', perm: 'full' },
+        ]
+      },
+      {
+        title: 'Reporting',
+        features: [
+          { name: 'All Reports', desc: 'Access all pre-built and custom reports org-wide', perm: 'full' },
+          { name: 'Report Scheduling', desc: 'Configure automated report delivery via email', perm: 'full' },
+          { name: 'Audit Logs', desc: 'View system audit logs for all data mutations', perm: 'full' },
+          { name: 'Data Export', desc: 'Export any data table to CSV/Excel', perm: 'full' },
+        ]
+      }
+    ]
+  },
+  {
+    id: 'executive',
+    label: 'Executive',
+    color: '#993C1D',
+    bg: '#FAECE7',
+    darkColor: '#F0997B',
+    darkBg: '#712B13',
+    dot: '#D85A30',
+    desc: 'CNO, CFO, COO — read-only strategic view across the health system',
+    sections: [
+      {
+        title: 'Executive Dashboard',
+        features: [
+          { name: 'System-wide KPIs', desc: 'Headcount, OT cost, open shifts, compliance score across all facilities', perm: 'view' },
+          { name: 'Multi-Facility Overview', desc: 'Side-by-side staffing and compliance status across all locations', perm: 'view' },
+          { name: 'Real-time Staffing Map', desc: 'Live green/yellow/red staffing status per unit across facilities', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Financial Reporting',
+        features: [
+          { name: 'Labor Cost Reports', desc: 'System-wide labor spend, overtime, agency vs internal', perm: 'view' },
+          { name: 'Budget vs Actual', desc: 'Consolidated budget variance by facility and department', perm: 'view' },
+          { name: 'Labor Forecasting', desc: 'View forecast models and projected costs', perm: 'view' },
+          { name: 'Turnover & Retention', desc: 'Turnover rates, retention trends, vacancy metrics', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Compliance Reporting',
+        features: [
+          { name: 'Staffing Ratio Compliance', desc: 'Compliance rates across all departments and facilities', perm: 'view' },
+          { name: 'Credential Compliance', desc: 'Org-wide credential expiry status and compliance %', perm: 'view' },
+          { name: 'Regulatory Reports', desc: 'CMS, JCAHO-aligned compliance summaries', perm: 'view' },
+        ]
+      },
+      {
+        title: 'Operations',
+        features: [
+          { name: 'Emergency Event Log', desc: 'View history of emergency events and response times', perm: 'view' },
+          { name: 'Workforce Analytics', desc: 'Custom report builder with executive-level dimensions', perm: 'view' },
+          { name: 'Scheduled Reports', desc: 'Receive automated executive summary reports via email', perm: 'view' },
+        ]
+      }
+    ]
+  }
+];
+
+let active = 'staff';
+
+function render() {
+  const role = roles.find(r => r.id === active);
+  const total = role.sections.reduce((sum, s) => sum + s.features.length, 0);
+  
+  document.getElementById('tabs').innerHTML = roles.map(r => `
+    <button class="tab${r.id === active ? ' active' : ''}" onclick="setRole('${r.id}')">${r.label}</button>
+  `).join('');
+
+  document.getElementById('content').innerHTML = `
+    <div class="count">${role.desc} — ${total} features across ${role.sections.length} areas</div>
+    ${role.sections.map(s => `
+      <div class="section">
+        <div class="section-title">${s.title}</div>
+        <div class="feature-list">
+          ${s.features.map(f => `
+            <div class="feature" onclick="window.sendPrompt && sendPrompt('Tell me more about the ${f.name} feature for ${role.label} role')">
+              <span class="dot" style="background:${role.dot}"></span>
+              <div>
+                <div class="feature-name">${f.name}</div>
+                <div class="feature-desc">${f.desc}</div>
+                <span class="perm ${f.perm}">${f.perm === 'full' ? 'Full Access' : f.perm === 'view' ? 'View Only' : 'Own Data'}</span>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('')}
+  `;
+}
+
+function setRole(id) { active = id; render(); }
+render();
+</script>

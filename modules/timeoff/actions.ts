@@ -42,6 +42,8 @@ export async function requestTimeOff(input: unknown) {
   });
   if (error) throw new Error(error.message ?? "Unable to submit time off");
   revalidatePath("/timeoff");
+  revalidatePath("/my-timeoff");
+  revalidatePath("/dashboard/staff");
 }
 
 export async function approveTimeOff(id: string, decidedBy: string) {

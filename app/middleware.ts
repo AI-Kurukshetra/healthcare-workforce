@@ -1,13 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createMiddlewareClient } from "@supabase/auth-helpers-nextjs";
-import { Database } from "@/types/db";
 
 const PUBLIC_PATHS = ["/signin", "/signup", "/_next", "/favicon.ico"];
-const ROLE_HOME: Record<string, string> = {
+const ROLE_HOME: Record<"admin" | "manager" | "staff", string> = {
   admin: "/dashboard/admin",
   manager: "/dashboard/manager",
   staff: "/dashboard/staff",
 };
+
+const ROLE_RULES: Record<keyof typeof ROLE_HOME, Array<(path: string) => boolean>> = {
+  admin: [
+    (p) => p.startsWith("/dashboard"),
+    (p) => p.startsWith("/staff"),
+    (p) => p.startsWith("/departments"),
+    (p) => p.startsWith("/schedules"),
+    (p) => p.startsWith("/time-tracking"),
+    (p) => p.startsWith("/timeoff"),
+    (p) => p.startsWith("/credentials"),
+    (p) => p.startsWith("/reports"),
+    (p) => p.startsWith("/notifications"),
+    (p) => p.startsWith("/settings"),
+  ],
+  manager: [
+    (p) => p.startsWith("/dashboard/manager"),
+    (p) => p.startsWith("/staff") && !p.startsWith("/staff/create") && !p.startsWith("/staff/edit"),
+    (p) => p.startsWith("/schedules"),
+    (p) => p.startsWith("/time-tracking"),
+    (p) => p.startsWith("/timeoff"),
+    (p) => p.startsWith("/credentials"),
+    (p) => p.startsWith("/reports"),
+    (p) => p.startsWith("/notifications"),
+  ],
+  staff: [
+    (p) => p.startsWith("/dashboard/staff"),
+    (p) => p.startsWith("/my-schedule"),
+    (p) => p.startsWith("/time-tracking"),
+    (p) => p.startsWith("/my-timeoff"),
+    (p) => p.startsWith("/my-credentials"),
+    (p) => p.startsWith("/notifications"),
+  ],
+};
+
+const isAllowed = (path: string, role: keyof typeof ROLE_HOME) =>
+  ROLE_RULES[role].some((match) => match(path));
 
 export async function middleware(req: NextRequest) {
   const url = req.nextUrl;
@@ -36,22 +71,20 @@ export async function middleware(req: NextRequest) {
     .maybeSingle();
   if (error) console.error("role fetch failed", error.message);
 
-  const role = (roleRow as any)?.roles?.slug ?? (session.user.user_metadata.role as string | undefined) ?? "staff";
+  const role = ((roleRow as any)?.roles?.slug ??
+    (session.user.user_metadata.role as string | undefined) ??
+    "staff") as keyof typeof ROLE_HOME;
   const roleHome = ROLE_HOME[role] ?? ROLE_HOME.staff;
 
   res.cookies.set("role", role, { path: "/", httpOnly: false });
 
-  const isDashboardRoot = pathname === "/dashboard" || pathname === "/";
-  const isDashboardSection = pathname.startsWith("/dashboard/");
-  const requestedSection = pathname.split("/")[2];
-
-  if (isDashboardRoot) {
+  // Redirect generic dashboard landing to role home
+  if (pathname === "/dashboard" || pathname === "/") {
     return NextResponse.redirect(new URL(roleHome, req.url));
   }
 
-  if (isDashboardSection && requestedSection && ROLE_HOME[requestedSection] && requestedSection !== role) {
-    return NextResponse.redirect(new URL(roleHome, req.url));
-  }
+  // Enforce role-based access
+  if (!isAllowed(pathname, role)) return NextResponse.redirect(new URL(roleHome, req.url));
 
   return res;
 }

@@ -1,13 +1,26 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSessionWithRole } from "@/modules/auth/queries";
 
 export async function listTimeEntries(staffId?: string) {
   const supabase = createSupabaseServerClient();
+  const ctx = await getSessionWithRole();
+
   let query = supabase
     .from("time_entries")
-    .select("id, staff_id, shift_id, clock_in, clock_out, method, created_at, profiles:staff_id(full_name)")
+    .select("id, staff_id, shift_id, clock_in, clock_out, method, created_at, profiles:staff_id(full_name, department_id)")
     .order("clock_in", { ascending: false })
     .limit(50);
+
   if (staffId) query = query.eq("staff_id", staffId);
+
+  if (ctx?.role === "manager" && ctx.departmentId && !staffId) {
+    query = query.eq("profiles.department_id", ctx.departmentId);
+  }
+
+  if (ctx?.role === "staff" && !staffId) {
+    query = query.eq("staff_id", ctx.session?.user.id ?? "");
+  }
+
   const { data, error } = await query;
   if (error) {
     console.error("listTimeEntries failed", error.message);

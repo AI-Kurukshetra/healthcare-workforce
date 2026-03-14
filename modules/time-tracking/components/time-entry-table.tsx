@@ -1,19 +1,24 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
 import dayjs from "dayjs";
+import { listTimeEntries } from "../queries";
+import { getSessionWithRole } from "@/modules/auth/queries";
 
-async function loadEntries() {
-  const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("time_entries")
-    .select("id, clock_in, clock_out, method")
-    .order("clock_in", { ascending: false })
-    .limit(50);
-  if (error) throw error;
-  return data ?? [];
-}
+type Scope = "self" | "team" | "all";
 
-export default async function TimeEntryTable() {
-  const rows = await loadEntries();
+export default async function TimeEntryTable({ scope = "self" }: { scope?: Scope }) {
+  const session = await getSessionWithRole();
+  const userId = session?.session?.user.id;
+
+  if (scope === "self" && !userId) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-muted px-4 py-6 text-sm text-slate-600">
+        Unable to load entries for your account.
+      </div>
+    );
+  }
+
+  const rows =
+    scope === "self" && userId ? await listTimeEntries(userId) : await listTimeEntries();
+
   return (
     <div className="overflow-auto rounded border bg-white">
       <table className="min-w-full text-sm">
@@ -29,7 +34,7 @@ export default async function TimeEntryTable() {
             <tr key={row.id} className="border-t">
               <td className="p-3">{dayjs(row.clock_in).format("MMM D, HH:mm")}</td>
               <td className="p-3">
-                {row.clock_out ? dayjs(row.clock_out).format("MMM D, HH:mm") : "—"}
+                {row.clock_out ? dayjs(row.clock_out).format("MMM D, HH:mm") : "--"}
               </td>
               <td className="p-3 capitalize">{row.method}</td>
             </tr>

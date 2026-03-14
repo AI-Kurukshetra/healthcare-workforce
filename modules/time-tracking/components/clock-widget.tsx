@@ -9,14 +9,19 @@ export default function ClockWidget() {
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
-    supabase
-      .from("time_entries")
-      .select("id, clock_out")
-      .eq("staff_id", supabase.auth.getSession().then(({ data }) => data.session?.user.id ?? ""))
-      .is("clock_out", null)
-      .order("clock_in", { ascending: false })
-      .limit(1)
-      .then(({ data }) => setOpenEntry(data?.[0]?.id ?? null));
+    supabase.auth.getSession().then(({ data }) => {
+      const userId = data.session?.user.id;
+      if (!userId) return;
+
+      supabase
+        .from("time_entries")
+        .select("id, clock_out")
+        .eq("staff_id", userId)
+        .is("clock_out", null)
+        .order("clock_in", { ascending: false })
+        .limit(1)
+        .then(({ data }) => setOpenEntry(data?.[0]?.id ?? null));
+    });
   }, []);
 
   const handleClock = async () => {

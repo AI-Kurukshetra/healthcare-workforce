@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Skeleton } from "@/components/ui/skeleton";
 import CredentialsBoard from "@/modules/credentials/components/credentials-board";
 import CredentialAlerts from "@/modules/credentials/components/credential-alerts";
+import RoleGuard from "@/components/auth/role-guard";
 
 function BoardSkeleton() {
   return (
@@ -17,36 +18,38 @@ function BoardSkeleton() {
 
 export default function CredentialsPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        badge="Compliance"
-        title="Credentials & Licenses"
-        description="Track certifications, license expirations, and document compliance."
-      />
+    <RoleGuard roles={["admin", "manager"]}>
+      <div className="space-y-6">
+        <PageHeader
+          badge="Compliance"
+          title="Credentials & Licenses"
+          description="Track certifications, license expirations, and document compliance."
+        />
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Expiration Alerts</CardTitle>
-          <CardDescription>Credentials expiring within 45 days or already expired.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Suspense fallback={<BoardSkeleton />}>
-            <CredentialAlerts />
-          </Suspense>
-        </CardContent>
-      </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle>Expiration Alerts</CardTitle>
+            <CardDescription>Credentials expiring within 45 days or already expired.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Suspense fallback={<BoardSkeleton />}>
+              <CredentialAlerts />
+            </Suspense>
+          </CardContent>
+        </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>All Credentials</CardTitle>
-          <CardDescription>Complete credential inventory across all staff.</CardDescription>
-        </CardHeader>
-        <CardContent className="pt-0">
-          <Suspense fallback={<BoardSkeleton />}>
-            <CredentialsBoard />
-          </Suspense>
-        </CardContent>
-      </Card>
-    </div>
+        <Card>
+          <CardHeader>
+            <CardTitle>All Credentials</CardTitle>
+            <CardDescription>Complete credential inventory across all staff.</CardDescription>
+          </CardHeader>
+          <CardContent className="pt-0">
+            <Suspense fallback={<BoardSkeleton />}>
+              <CredentialsBoard />
+            </Suspense>
+          </CardContent>
+        </Card>
+      </div>
+    </RoleGuard>
   );
 }

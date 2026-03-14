@@ -3,8 +3,7 @@ import { useEffect, useState } from "react";
 import dayjs from "dayjs";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
-import { EmptyState } from "@/components/ui/empty-state";
-import { Clock, User, MapPin } from "lucide-react";
+import { Clock, User } from "lucide-react";
 
 type Shift = {
   id: string;
@@ -18,31 +17,41 @@ type Shift = {
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function ScheduleCalendar() {
+export default function ScheduleCalendar({ scope = "all" }: { scope?: "all" | "self" }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
-
   const weekStart = dayjs().startOf("week").add(weekOffset, "week");
 
   useEffect(() => {
     const supabase = createSupabaseBrowserClient();
     setLoading(true);
 
-    supabase
-      .from("shifts")
-      .select("id, start_at, end_at, staff_id, unit_id, status")
-      .gte("start_at", weekStart.toISOString())
-      .lte("end_at", weekStart.add(7, "day").toISOString())
-      .order("start_at")
-      .then(({ data, error }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const userId = data.session?.user.id ?? null;
+      const weekStart = dayjs().startOf("week").add(weekOffset, "week");
+
+      let query = supabase
+        .from("shifts")
+        .select("id, start_at, end_at, staff_id, unit_id, status")
+        .gte("start_at", weekStart.toISOString())
+        .lte("end_at", weekStart.add(7, "day").toISOString())
+        .order("start_at");
+
+      if (scope === "self" && userId) {
+        query = query.or(`staff_id.eq.${userId},staff_id.is.null`);
+      }
+
+      query.then(({ data, error }) => {
         if (error) console.error(error.message);
         setShifts(data ?? []);
         setLoading(false);
       });
-  }, [weekOffset]);
+    });
+  }, [weekOffset, scope]);
 
   const getShiftsForDay = (dayIndex: number) => {
+    const weekStart = dayjs().startOf("week").add(weekOffset, "week");
     const dayStart = weekStart.add(dayIndex, "day");
     const dayEnd = dayStart.add(1, "day");
     return shifts.filter(

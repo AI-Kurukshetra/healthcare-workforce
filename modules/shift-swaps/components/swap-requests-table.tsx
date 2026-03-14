@@ -29,15 +29,23 @@ export default function SwapRequestsTable({ isManager = false }: { isManager?: b
       setDecidedBy(data.session?.user?.id ?? "");
     });
 
-    supabase
-      .from("swap_requests")
-      .select("id, shift_id, from_staff_id, to_staff_id, status, reason, created_at")
-      .order("created_at", { ascending: false })
-      .then(({ data, error }) => {
+    supabase.auth.getSession().then(({ data }) => {
+      const userId = data.session?.user?.id;
+      let query = supabase
+        .from("swap_requests")
+        .select("id, shift_id, from_staff_id, to_staff_id, status, reason, created_at")
+        .order("created_at", { ascending: false });
+
+      if (!isManager && userId) {
+        query = query.or(`from_staff_id.eq.${userId},to_staff_id.eq.${userId}`);
+      }
+
+      query.then(({ data, error }) => {
         if (error) console.error(error.message);
         setRows(data ?? []);
         setLoading(false);
       });
+    });
   }, []);
 
   const handleDecide = async (id: string, status: "approved" | "declined") => {

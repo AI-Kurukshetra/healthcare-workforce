@@ -9,10 +9,11 @@ import NotificationList from "@/modules/notifications/components/notification-li
 import ExpiringCredentials from "@/modules/credentials/components/expiring-credentials";
 import { getAnalyticsOverview } from "@/modules/analytics/queries";
 import { listStaff } from "@/modules/staff/queries";
+import RoleGuard from "@/components/auth/role-guard";
 
 async function DashboardStaffTable() {
   const staffData = await listStaff();
-  return <StaffTable data={staffData} />;
+  return <StaffTable data={staffData} canManage />;
 }
 
 async function OverviewWidgets() {
@@ -77,56 +78,58 @@ function ListSkeleton() {
 
 export default function AdminDashboard() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        badge="Platform oversight"
-        title="Admin Dashboard"
-        description="System metrics, workforce headcount, credential alerts, and compliance monitoring."
-      />
+    <RoleGuard roles={["admin"]}>
+      <div className="space-y-6">
+        <PageHeader
+          badge="Platform oversight"
+          title="Admin Dashboard"
+          description="System metrics, workforce headcount, credential alerts, and compliance monitoring."
+        />
 
-      <Suspense fallback={<WidgetSkeleton />}>
-        <OverviewWidgets />
-      </Suspense>
+        <Suspense fallback={<WidgetSkeleton />}>
+          <OverviewWidgets />
+        </Suspense>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Staff Directory</CardTitle>
-            <CardDescription>Live roster with roles for fast access reviews.</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Suspense fallback={<TableSkeleton />}>
-              <DashboardStaffTable />
-            </Suspense>
-          </CardContent>
-        </Card>
-
-        <div className="space-y-6">
-          <Card>
+        <div className="grid gap-6 lg:grid-cols-3">
+          <Card className="lg:col-span-2">
             <CardHeader>
-              <CardTitle>Credential Alerts</CardTitle>
-              <CardDescription>Expiring and expired certifications.</CardDescription>
+              <CardTitle>Staff Directory</CardTitle>
+              <CardDescription>Live roster with roles for fast access reviews.</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <Suspense fallback={<ListSkeleton />}>
-                <ExpiringCredentials />
+              <Suspense fallback={<TableSkeleton />}>
+                <DashboardStaffTable />
               </Suspense>
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>System Notifications</CardTitle>
-              <CardDescription>Schedule, credential, and compliance alerts.</CardDescription>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <Suspense fallback={<ListSkeleton />}>
-                <NotificationList />
-              </Suspense>
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Credential Alerts</CardTitle>
+                <CardDescription>Expiring and expired certifications.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Suspense fallback={<ListSkeleton />}>
+                  <ExpiringCredentials />
+                </Suspense>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle>System Notifications</CardTitle>
+                <CardDescription>Schedule, credential, and compliance alerts.</CardDescription>
+              </CardHeader>
+              <CardContent className="pt-0">
+                <Suspense fallback={<ListSkeleton />}>
+                  <NotificationList />
+                </Suspense>
+              </CardContent>
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

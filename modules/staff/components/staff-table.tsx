@@ -10,9 +10,10 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 
 interface StaffTableProps {
   data: StaffListItem[];
+  canManage: boolean;
 }
 
-export default function StaffTable({ data }: StaffTableProps) {
+export default function StaffTable({ data, canManage }: StaffTableProps) {
   const [deactivateId, setDeactivateId] = useState<string | null>(null);
 
   const columns: ColumnDef<StaffListItem>[] = [
@@ -61,38 +62,40 @@ export default function StaffTable({ data }: StaffTableProps) {
         </span>
       ),
     },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => (
-        <div className="flex items-center gap-2">
-          <Link href={`/staff/${row.original.id}`}>
-            <Button variant="outline" className="h-8 w-8 p-0" title="View Profile">
-              <Eye className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Link href={`/staff/edit/${row.original.id}`}>
-            <Button variant="outline" className="h-8 w-8 p-0" title="Edit">
-              <Edit className="h-4 w-4" />
-            </Button>
-          </Link>
-          <Button
-            variant="outline"
-            className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-            title="Deactivate"
-            onClick={() => setDeactivateId(row.original.id)}
-          >
-            <UserX className="h-4 w-4" />
-          </Button>
-        </div>
-      ),
-    },
+    canManage
+      ? {
+          id: "actions",
+          header: "Actions",
+          cell: ({ row }) => (
+            <div className="flex items-center gap-2">
+              <Link href={`/staff/${row.original.id}`}>
+                <Button variant="outline" className="h-8 w-8 p-0" title="View Profile">
+                  <Eye className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Link href={`/staff/edit/${row.original.id}`}>
+                <Button variant="outline" className="h-8 w-8 p-0" title="Edit">
+                  <Edit className="h-4 w-4" />
+                </Button>
+              </Link>
+              <Button
+                variant="outline"
+                className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                title="Deactivate"
+                onClick={() => setDeactivateId(row.original.id)}
+              >
+                <UserX className="h-4 w-4" />
+              </Button>
+            </div>
+          ),
+        }
+      : null,
   ];
 
   return (
     <>
       <DataTable
-        columns={columns}
+        columns={columns.filter(Boolean) as ColumnDef<StaffListItem>[]}
         data={data}
         searchPlaceholder="Search staff by name, email, or role..."
       />

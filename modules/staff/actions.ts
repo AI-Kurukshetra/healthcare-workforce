@@ -1,3 +1,5 @@
+ "use server";
+ 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseActionClient } from "@/lib/supabase/action";
@@ -302,4 +304,3 @@ export async function updateStaff(data: {
   revalidatePath(`/staff/${data.id}`);
   revalidatePath("/staff");
 }
-

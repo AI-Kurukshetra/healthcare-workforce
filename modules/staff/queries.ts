@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getSessionWithRole } from "@/modules/auth/queries";
 import {
   StaffListItem,
   StaffDetail,
@@ -45,7 +46,12 @@ function mapCredentials(rows: any[] | null): StaffCredential[] {
 
 export async function listStaff(): Promise<StaffListItem[]> {
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
+  const ctx = await getSessionWithRole();
+
+  // Staff should not list all staff; return self if needed later.
+  if (ctx?.role === "staff") return [];
+
+  let query = supabase
     .from("staff")
     .select(
       `
@@ -54,11 +60,17 @@ export async function listStaff(): Promise<StaffListItem[]> {
       phone,
       shift_preference,
       availability,
-      profiles:profiles!staff_id_fkey(full_name,email,role),
+      profiles:profiles!staff_id_fkey(full_name,email,role,department_id),
       staff_skills(skill_id, level, expires_at, certification_number, skills(name, category))
     `
     )
     .order("full_name", { referencedTable: "profiles" });
+
+  if (ctx?.role === "manager" && ctx.departmentId) {
+    query = query.eq("profiles.department_id", ctx.departmentId);
+  }
+
+  const { data, error } = await query;
 
   if (error) {
     console.error("listStaff failed", error.message);
@@ -83,7 +95,9 @@ export async function listStaff(): Promise<StaffListItem[]> {
 
 export async function getStaffById(id: string): Promise<StaffDetail | null> {
   const supabase = createSupabaseServerClient();
-  const { data, error } = await supabase
+  const ctx = await getSessionWithRole();
+
+  let query = supabase
     .from("staff")
     .select(
       `
@@ -97,8 +111,19 @@ export async function getStaffById(id: string): Promise<StaffDetail | null> {
       staff_skills(skill_id, level, expires_at, certification_number, skills(name, category))
     `
     )
-    .eq("id", id)
-    .maybeSingle();
+    .eq("id", id);
+
+  // Managers can only access staff in their department
+  if (ctx?.role === "manager" && ctx.departmentId) {
+    query = query.eq("profiles.department_id", ctx.departmentId);
+  }
+
+  // Staff can only view self
+  if (ctx?.role === "staff" && ctx.session?.user.id !== id) {
+    return null;
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error || !data) {
     if (error) console.error("getStaffById failed", error.message);

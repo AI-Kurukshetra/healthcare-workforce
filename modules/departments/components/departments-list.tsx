@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { DepartmentItem } from "./department-item";
 
 async function loadData() {
   const supabase = createSupabaseServerClient();
@@ -11,17 +12,19 @@ async function loadData() {
 
 export default async function DepartmentsList() {
   const departments = await loadData();
+  
+  if (departments.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border p-8 text-center bg-slate-50">
+        <p className="text-slate-500">No departments setup yet.</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {departments.map((dept) => (
-        <div key={dept.id} className="rounded border p-4">
-          <div className="font-semibold">{dept.name}</div>
-          <ul className="mt-2 text-sm text-gray-600">
-            {dept.units?.map((u: any) => (
-              <li key={u.id}>• {u.name}</li>
-            ))}
-          </ul>
-        </div>
+        <DepartmentItem key={dept.id} dept={dept} />
       ))}
     </div>
   );

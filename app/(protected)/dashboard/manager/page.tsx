@@ -9,6 +9,7 @@ import PendingApprovals from "@/modules/timeoff/components/pending-approvals";
 import SwapRequestsTable from "@/modules/shift-swaps/components/swap-requests-table";
 import { getAnalyticsOverview, getPendingApprovalCounts } from "@/modules/analytics/queries";
 import { getShiftCoverage, getOpenShiftsCount } from "@/modules/schedules/queries";
+import RoleGuard from "@/components/auth/role-guard";
 
 async function ManagerWidgets() {
   let overview = { totalStaff: 0, totalDepartments: 0, credentialAlerts: 0, openShifts: 0 };
@@ -70,52 +71,54 @@ function ListSkeleton() {
 
 export default function ManagerDashboard() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        badge="Operations Control"
-        title="Manager Dashboard"
-        description="Real-time staffing posture, credential expirations, and pending approvals."
-      />
+    <RoleGuard roles={["manager", "admin"]}>
+      <div className="space-y-6">
+        <PageHeader
+          badge="Operations Control"
+          title="Manager Dashboard"
+          description="Real-time staffing posture, credential expirations, and pending approvals."
+        />
 
-      <Suspense fallback={<WidgetSkeleton />}>
-        <ManagerWidgets />
-      </Suspense>
+        <Suspense fallback={<WidgetSkeleton />}>
+          <ManagerWidgets />
+        </Suspense>
 
-      <div className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>Pending Approvals</CardTitle>
-            <CardDescription>Time-off and swap requests waiting for your decision.</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Suspense fallback={<ListSkeleton />}>
-              <PendingApprovals />
-            </Suspense>
-          </CardContent>
-        </Card>
+        <div className="grid gap-6 lg:grid-cols-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Pending Approvals</CardTitle>
+              <CardDescription>Time-off and swap requests waiting for your decision.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Suspense fallback={<ListSkeleton />}>
+                <PendingApprovals />
+              </Suspense>
+            </CardContent>
+          </Card>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Expiring Credentials</CardTitle>
-            <CardDescription>30-day lookahead to prevent shift interruptions.</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <Suspense fallback={<ListSkeleton />}>
-              <ExpiringCredentials />
-            </Suspense>
-          </CardContent>
-        </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Expiring Credentials</CardTitle>
+              <CardDescription>30-day lookahead to prevent shift interruptions.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <Suspense fallback={<ListSkeleton />}>
+                <ExpiringCredentials />
+              </Suspense>
+            </CardContent>
+          </Card>
 
-        <Card className="lg:col-span-2">
-          <CardHeader>
-            <CardTitle>Shift Swap Requests</CardTitle>
-            <CardDescription>Review and decide on swap requests.</CardDescription>
-          </CardHeader>
-          <CardContent className="pt-0">
-            <SwapRequestsTable isManager />
-          </CardContent>
-        </Card>
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Shift Swap Requests</CardTitle>
+              <CardDescription>Review and decide on swap requests.</CardDescription>
+            </CardHeader>
+            <CardContent className="pt-0">
+              <SwapRequestsTable isManager />
+            </CardContent>
+          </Card>
+        </div>
       </div>
-    </div>
+    </RoleGuard>
   );
 }

@@ -3,9 +3,11 @@ import * as React from "react";
 import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "secondary" | "outline" | "ghost" | "danger";
+type Size = "default" | "sm" | "lg" | "icon";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
+  size?: Size;
   loading?: boolean;
   fullWidth?: boolean;
 }
@@ -26,13 +28,21 @@ const variantStyles: Record<Variant, string> = {
     "bg-rose-600 text-white shadow-sm hover:bg-rose-700 focus-visible:outline-rose-600 active:bg-rose-800",
 };
 
+const sizeStyles: Record<Size, string> = {
+  default: "h-10 px-4 py-2",
+  sm: "h-9 rounded-md px-3",
+  lg: "h-11 rounded-md px-8",
+  icon: "h-10 w-10",
+};
+
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, children, variant = "primary", loading, fullWidth, ...props }, ref) => (
+  ({ className, children, variant = "primary", size = "default", loading, fullWidth, ...props }, ref) => (
     <button
       ref={ref}
       className={cn(
         baseStyles,
         variantStyles[variant],
+        sizeStyles[size],
         fullWidth && "w-full",
         loading && "cursor-wait",
         className

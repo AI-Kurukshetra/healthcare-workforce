@@ -16,32 +16,50 @@ import {
   HeartPulse,
 } from "lucide-react";
 import { useState, useEffect } from "react";
+import { useUserRole } from "@/modules/auth/hooks";
 
-const NAV_ITEMS = [
-  { label: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { label: "Staff", href: "/staff", icon: Users },
-  { label: "Departments", href: "/departments", icon: Building2 },
-  { label: "Schedules", href: "/schedules", icon: CalendarDays },
-  { label: "Time Tracking", href: "/time-tracking", icon: Clock },
-  { label: "Time Off", href: "/timeoff", icon: CalendarOff },
-  { label: "Credentials", href: "/credentials", icon: ShieldCheck },
-  { label: "Reports", href: "/reports", icon: BarChart3 },
-  { label: "Notifications", href: "/notifications", icon: Bell },
-];
+const NAV_BY_ROLE = {
+  admin: [
+    { label: "Dashboard", href: "/dashboard/admin", icon: LayoutDashboard },
+    { label: "Staff", href: "/staff", icon: Users },
+    { label: "Departments", href: "/departments", icon: Building2 },
+    { label: "Schedules", href: "/schedules", icon: CalendarDays },
+    { label: "Time Tracking", href: "/time-tracking", icon: Clock },
+    { label: "Time Off", href: "/timeoff", icon: CalendarOff },
+    { label: "Credentials", href: "/credentials", icon: ShieldCheck },
+    { label: "Reports", href: "/reports", icon: BarChart3 },
+    { label: "Notifications", href: "/notifications", icon: Bell },
+  ],
+  manager: [
+    { label: "Dashboard", href: "/dashboard/manager", icon: LayoutDashboard },
+    { label: "Team Staff", href: "/staff", icon: Users },
+    { label: "Schedules", href: "/schedules", icon: CalendarDays },
+    { label: "Time Off Approvals", href: "/timeoff", icon: CalendarOff },
+    { label: "Credentials", href: "/credentials", icon: ShieldCheck },
+    { label: "Reports", href: "/reports", icon: BarChart3 },
+    { label: "Notifications", href: "/notifications", icon: Bell },
+  ],
+  staff: [
+    { label: "Dashboard", href: "/dashboard/staff", icon: LayoutDashboard },
+    { label: "My Schedule", href: "/my-schedule", icon: CalendarDays },
+    { label: "Time Tracking", href: "/time-tracking", icon: Clock },
+    { label: "My Time Off", href: "/my-timeoff", icon: CalendarOff },
+    { label: "My Credentials", href: "/my-credentials", icon: ShieldCheck },
+    { label: "Notifications", href: "/notifications", icon: Bell },
+  ],
+};
 
 export default function Sidebar() {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const role = useUserRole() ?? "staff";
 
   /* Close mobile drawer on route change */
   useEffect(() => {
     setOpen(false);
   }, [pathname]);
 
-  const isActive = (href: string) => {
-    if (href === "/dashboard") return pathname.startsWith("/dashboard");
-    return pathname === href || pathname.startsWith(href + "/");
-  };
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
 
   return (
     <>
@@ -81,7 +99,7 @@ export default function Sidebar() {
 
         {/* Navigation */}
         <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-          {NAV_ITEMS.map((item) => {
+          {NAV_BY_ROLE[role].map((item) => {
             const active = isActive(item.href);
             const Icon = item.icon;
             return (

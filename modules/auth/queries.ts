@@ -7,12 +7,11 @@ export async function getSessionWithRole() {
   } = await supabase.auth.getSession();
   if (!session) return null;
 
-  const { data: roleRow } = await supabase
-    .from("user_roles")
-    .select("roles(slug)")
-    .eq("user_id", session.user.id)
-    .maybeSingle();
+  const [{ data: roleRow }, { data: profileRow }] = await Promise.all([
+    supabase.from("user_roles").select("roles(slug)").eq("user_id", session.user.id).maybeSingle(),
+    supabase.from("profiles").select("department_id, unit_id").eq("id", session.user.id).maybeSingle(),
+  ]);
 
   const role = (roleRow as any)?.roles?.slug ?? (session.user.user_metadata.role as string | undefined) ?? "staff";
-  return { session, role };
+  return { session, role, departmentId: (profileRow as any)?.department_id ?? null, unitId: (profileRow as any)?.unit_id ?? null };
 }
