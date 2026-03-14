@@ -33,9 +33,15 @@ interface Department {
 export default function StaffForm({
   initialData,
   departments,
+  allowedRoles = ["staff", "manager", "admin"],
+  defaultDepartmentId,
+  lockDepartment = false,
 }: {
   initialData?: any;
   departments: Department[];
+  allowedRoles?: Array<"admin" | "manager" | "staff">;
+  defaultDepartmentId?: string;
+  lockDepartment?: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -55,7 +61,7 @@ export default function StaffForm({
       phone: initialData?.phone || "",
       role: initialData?.role || "staff",
       employmentType: initialData?.title || "",
-      departmentId: initialData?.departmentId || "",
+      departmentId: defaultDepartmentId || initialData?.departmentId || "",
       unitId: initialData?.unitId || "",
     },
   });
@@ -118,9 +124,11 @@ export default function StaffForm({
                 {...register("role")}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
               >
-                <option value="staff">Staff</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
+                {allowedRoles.map((r) => (
+                  <option key={r} value={r}>
+                    {r[0].toUpperCase() + r.slice(1)}
+                  </option>
+                ))}
               </select>
             </div>
             <div className="space-y-1.5">
@@ -140,6 +148,7 @@ export default function StaffForm({
               <Label>Department</Label>
               <select
                 {...register("departmentId")}
+                disabled={lockDepartment}
                 className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
               >
                 <option value="">Select department...</option>

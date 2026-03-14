@@ -8,7 +8,7 @@ import { getSessionWithRole } from "@/modules/auth/queries";
 export default async function StaffPage() {
   const session = await getSessionWithRole();
   const role = session?.role ?? "staff";
-  const canManage = role === "admin";
+  const canManage = role === "admin" || role === "manager";
 
   return (
     <RoleGuard roles={["admin", "manager"]}>

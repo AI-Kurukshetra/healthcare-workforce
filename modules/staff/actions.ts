@@ -71,6 +71,25 @@ const credentialSchema = z.object({
 
 const toDateString = (value?: Date | null) => (value ? value.toISOString().slice(0, 10) : null);
 
+async function getCallerContext() {
+  const supabase = createSupabaseActionClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not authenticated");
+
+  const [{ data: roleRow }, { data: profileRow }] = await Promise.all([
+    supabase.from("user_roles").select("roles(slug)").eq("user_id", user.id).maybeSingle(),
+    supabase.from("profiles").select("department_id").eq("id", user.id).maybeSingle(),
+  ]);
+
+  const role = ((roleRow as any)?.roles?.slug ??
+    (user.user_metadata?.role as string | undefined) ??
+    "staff") as "admin" | "manager" | "staff";
+
+  return { userId: user.id, role, departmentId: (profileRow as any)?.department_id ?? null };
+}
+
 export async function upsertStaffProfile(input: unknown) {
   const data = staffProfileSchema.parse(input);
   const supabase = createSupabaseActionClient();
@@ -198,6 +217,15 @@ export async function createStaff(data: {
   departmentId?: string;
   unitId?: string;
 }) {
+  const caller = await getCallerContext();
+
+  if (caller.role === "manager") {
+    // Managers may only create staff in their department and cannot create managers/admins
+    data.role = "staff";
+    data.departmentId = caller.departmentId ?? undefined;
+    if (!data.departmentId) throw new Error("Managers must be assigned to a department before creating staff.");
+  }
+
   const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!serviceRoleKey) throw new Error("Service role key is missing");
 
@@ -268,7 +296,23 @@ export async function updateStaff(data: {
 }) {
   if (!data.id) throw new Error("Staff ID is required for update");
   const supabase = createSupabaseActionClient();
+  const caller = await getCallerContext();
   const fullName = `${data.firstName} ${data.lastName}`.trim();
+
+  if (caller.role === "manager") {
+    data.role = "staff"; // managers cannot promote roles
+    data.departmentId = caller.departmentId ?? data.departmentId;
+    if (!caller.departmentId) throw new Error("Managers must be assigned to a department to edit staff.");
+
+    const { data: targetProfile } = await supabase
+      .from("profiles")
+      .select("department_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (targetProfile && (targetProfile as any).department_id !== caller.departmentId) {
+      throw new Error("Managers can only edit staff in their department.");
+    }
+  }
 
   const { error: profileError } = await supabase
     .from("profiles")

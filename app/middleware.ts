@@ -23,7 +23,7 @@ const ROLE_RULES: Record<keyof typeof ROLE_HOME, Array<(path: string) => boolean
   ],
   manager: [
     (p) => p.startsWith("/dashboard/manager"),
-    (p) => p.startsWith("/staff") && !p.startsWith("/staff/create") && !p.startsWith("/staff/edit"),
+    (p) => p.startsWith("/staff"),
     (p) => p.startsWith("/schedules"),
     (p) => p.startsWith("/time-tracking"),
     (p) => p.startsWith("/timeoff"),
