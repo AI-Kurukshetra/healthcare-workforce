@@ -65,11 +65,11 @@ export default function Sidebar() {
     <>
       {/* Mobile toggle */}
       <button
-        className="fixed left-4 top-4 z-50 rounded-lg bg-white p-2 shadow-md lg:hidden"
+        className="fixed left-4 top-4 z-50 rounded-lg bg-white p-2 text-slate-700 shadow-md lg:hidden"
         onClick={() => setOpen(!open)}
         aria-label="Toggle menu"
       >
-        {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+        {open ? <X className="h-5 w-5 shrink-0 text-current" aria-hidden /> : <Menu className="h-5 w-5 shrink-0 text-current" aria-hidden />}
       </button>
 
       {/* Overlay */}

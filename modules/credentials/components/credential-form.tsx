@@ -139,7 +139,7 @@ export default function CredentialForm({
         disabled={isSubmitting}
         className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
       >
-        <ShieldCheck className="h-4 w-4" />
+        <ShieldCheck className="h-4 w-4 shrink-0 text-current" aria-hidden />
         {isSubmitting ? "Saving…" : credential ? "Update Credential" : "Add Credential"}
       </button>
     </form>

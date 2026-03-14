@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -9,9 +9,11 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { createStaff, updateStaff } from "../actions";
+import { RegisteredProfileOption } from "../types";
 
 const staffSchema = z.object({
   id: z.string().optional(),
+  existingUserId: z.string().optional(),
   firstName: z.string().min(2, "First name is required"),
   lastName: z.string().min(2, "Last name is required"),
   email: z.string().email("Invalid email address"),
@@ -30,18 +32,29 @@ interface Department {
   units: { id: string; name: string }[];
 }
 
+function splitFullName(fullName: string) {
+  const trimmed = fullName.trim();
+  if (!trimmed) return { firstName: "", lastName: "" };
+  const [firstName, ...rest] = trimmed.split(" ");
+  return { firstName, lastName: rest.join(" ") };
+}
+
 export default function StaffForm({
   initialData,
   departments,
   allowedRoles = ["staff", "manager", "admin"],
   defaultDepartmentId,
   lockDepartment = false,
+  availableProfiles = [],
+  requireExistingProfile = false,
 }: {
   initialData?: any;
   departments: Department[];
   allowedRoles?: Array<"admin" | "manager" | "staff">;
   defaultDepartmentId?: string;
   lockDepartment?: boolean;
+  availableProfiles?: RegisteredProfileOption[];
+  requireExistingProfile?: boolean;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -49,12 +62,14 @@ export default function StaffForm({
   const {
     register,
     handleSubmit,
+    setValue,
     watch,
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(staffSchema),
     defaultValues: {
       id: initialData?.id,
+      existingUserId: "",
       firstName: initialData?.firstName || "",
       lastName: initialData?.lastName || "",
       email: initialData?.email || "",
@@ -66,10 +81,26 @@ export default function StaffForm({
     },
   });
 
+  const selectedExistingUserId = watch("existingUserId");
   const selectedDeptId = watch("departmentId");
   const selectedDept = departments.find((d) => d.id === selectedDeptId);
+  const selectedProfile = availableProfiles.find((profile) => profile.id === selectedExistingUserId);
+
+  useEffect(() => {
+    if (!selectedProfile || initialData) return;
+
+    const { firstName, lastName } = splitFullName(selectedProfile.fullName);
+    setValue("firstName", firstName || selectedProfile.email.split("@")[0]);
+    setValue("lastName", lastName);
+    setValue("email", selectedProfile.email);
+  }, [initialData, selectedProfile, setValue]);
 
   const onSubmit = async (data: FormData) => {
+    if (!initialData && requireExistingProfile && !data.existingUserId) {
+      toast.error("Select a registered user before creating staff.");
+      return;
+    }
+
     setLoading(true);
     try {
       if (initialData) {
@@ -92,6 +123,32 @@ export default function StaffForm({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
           <h3 className="mb-4 text-lg font-semibold text-slate-900">Personal Information</h3>
+          {!initialData && (requireExistingProfile || availableProfiles.length > 0) && (
+            <div className="mb-4 space-y-1.5">
+              <Label>Registered User {requireExistingProfile ? "*" : ""}</Label>
+              <select
+                {...register("existingUserId")}
+                className="w-full rounded-lg border border-border px-3 py-2 text-sm focus:border-brand-400 focus:outline-none focus:ring-2 focus:ring-brand-100"
+              >
+                <option value="">{requireExistingProfile ? "Select registered user..." : "Create a new account manually"}</option>
+                {availableProfiles.map((profile) => (
+                  <option key={profile.id} value={profile.id}>
+                    {profile.fullName || profile.email} ({profile.email})
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-slate-500">
+                {requireExistingProfile
+                  ? "Admins can add staff only from users who are already registered in the system."
+                  : "Admins can link an already registered user instead of creating a new login."}
+              </p>
+              {requireExistingProfile && availableProfiles.length === 0 && (
+                <p className="text-xs text-amber-700">
+                  No registered users are available to link yet. A user must sign up first, and users already linked as staff will not appear here.
+                </p>
+              )}
+            </div>
+          )}
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <Label>First Name *</Label>
@@ -105,7 +162,12 @@ export default function StaffForm({
             </div>
             <div className="space-y-1.5">
               <Label>Email *</Label>
-              <Input {...register("email")} type="email" placeholder="john@hospital.org" disabled={!!initialData} />
+              <Input
+                {...register("email")}
+                type="email"
+                placeholder="john@hospital.org"
+                disabled={!!initialData || !!selectedProfile}
+              />
               {errors.email && <p className="text-xs text-rose-600">{errors.email.message}</p>}
             </div>
             <div className="space-y-1.5">

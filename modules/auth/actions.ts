@@ -2,6 +2,7 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseActionClient } from "@/lib/supabase/action";
+import { ensureAuthUsersProvisioned } from "./admin-sync";
 import { authSchema } from "./validation";
 
 export async function signIn(input: unknown) {
@@ -28,27 +29,13 @@ export async function signUp(input: unknown, role: "admin" | "manager" | "staff"
   // If session exists (email confirmed or magic link), attach default role
   const userId = signUpRes.user?.id;
   if (userId) {
-    await supabase.from("profiles").upsert({
-      id: userId,
-      email: data.email,
-      full_name: data.fullName ?? signUpRes.user?.user_metadata?.full_name ?? "",
-      role,
-    });
-
-    const roleId = await getRoleId(role, supabase);
-    if (roleId) {
-      await supabase.from("user_roles").insert({
-        user_id: userId,
-        role_id: roleId,
-      });
-    }
+    await ensureAuthUsersProvisioned([
+      {
+        id: userId,
+        email: data.email,
+        fullName: data.fullName ?? signUpRes.user?.user_metadata?.full_name ?? "",
+        role,
+      },
+    ]);
   }
-}
-
-async function getRoleId(
-  slug: "admin" | "manager" | "staff",
-  supabase: ReturnType<typeof createSupabaseActionClient>
-) {
-  const { data } = await supabase.from("roles").select("id").eq("slug", slug).maybeSingle();
-  return data?.id ?? null;
 }

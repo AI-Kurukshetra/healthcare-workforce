@@ -36,6 +36,7 @@ export type StaffListItem = {
   id: string;
   name: string;
   role: string;
+  isActive: boolean;
   title: string | null;
   phone: string | null;
   email: string | null;
@@ -60,4 +61,11 @@ export type SkillMatrixShape = {
       skills: StaffSkill[];
     }
   >;
+};
+
+export type RegisteredProfileOption = {
+  id: string;
+  fullName: string;
+  email: string;
+  role: "admin" | "manager" | "staff";
 };

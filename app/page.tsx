@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 
 export default function HomePage() {
   return (
@@ -17,20 +16,24 @@ export default function HomePage() {
               Role-aware scheduling, credential governance, and timekeeping designed for hospital operations teams.
             </p>
             <div className="flex flex-wrap gap-3">
-              <Link href="/signin">
-                <Button>
-                  Launch Console <span aria-hidden="true">→</span>
-                </Button>
+              <Link
+                href="/signin"
+                className="inline-flex h-10 items-center justify-center rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700"
+              >
+                Launch Console <span aria-hidden="true">-&gt;</span>
               </Link>
-              <Link href="/signup">
-                <Button variant="secondary">Create account</Button>
+              <Link
+                href="/signup"
+                className="inline-flex h-10 items-center justify-center rounded-lg border border-border bg-white px-4 py-2 text-sm font-semibold text-slate-900 transition-colors hover:border-brand-200 hover:text-brand-800"
+              >
+                Create account
               </Link>
             </div>
             <div className="flex gap-4 text-xs text-slate-500">
               <span>HIPAA-ready workflows</span>
-              <span>•</span>
+              <span>&bull;</span>
               <span>Audit-grade access controls</span>
-              <span>•</span>
+              <span>&bull;</span>
               <span>Realtime staffing signals</span>
             </div>
           </div>

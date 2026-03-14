@@ -47,7 +47,7 @@ export function DataTable<T>({
     <div className="space-y-4">
       {/* Search */}
       <div className="relative max-w-sm">
-        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 shrink-0 text-slate-400" aria-hidden />
         <input
           type="text"
           placeholder={searchPlaceholder}
@@ -111,18 +111,18 @@ export function DataTable<T>({
           </span>
           <div className="flex gap-1">
             <button
-              className="rounded-lg border border-border p-2 hover:bg-slate-50 disabled:opacity-40"
+              className="rounded-lg border border-border p-2 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
               onClick={() => table.previousPage()}
               disabled={!table.getCanPreviousPage()}
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4 shrink-0 text-current" aria-hidden />
             </button>
             <button
-              className="rounded-lg border border-border p-2 hover:bg-slate-50 disabled:opacity-40"
+              className="rounded-lg border border-border p-2 text-slate-700 hover:bg-slate-50 disabled:opacity-40"
               onClick={() => table.nextPage()}
               disabled={!table.getCanNextPage()}
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-4 w-4 shrink-0 text-current" aria-hidden />
             </button>
           </div>
         </div>

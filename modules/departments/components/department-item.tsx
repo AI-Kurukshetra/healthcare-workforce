@@ -85,10 +85,10 @@ export function DepartmentItem({ dept }: { dept: any }) {
           {!isEditing && (
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={() => setIsEditing(true)}>
-                <Edit2 className="h-4 w-4 text-slate-500" />
+                <Edit2 className="h-4 w-4 shrink-0 text-slate-500" aria-hidden />
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setShowDeleteConfirm(true)}>
-                <Trash2 className="h-4 w-4 text-red-500" />
+                <Trash2 className="h-4 w-4 shrink-0 text-red-500" aria-hidden />
               </Button>
             </div>
           )}
@@ -124,7 +124,7 @@ export function DepartmentItem({ dept }: { dept: any }) {
               className="mt-4 flex items-center gap-1"
               onClick={() => setShowAddUnit(true)}
             >
-              <Plus className="h-4 w-4" /> Add Unit
+              <Plus className="h-4 w-4 shrink-0 text-current" aria-hidden /> Add Unit
             </Button>
           )}
         </CardContent>

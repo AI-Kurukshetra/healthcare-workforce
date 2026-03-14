@@ -1,7 +1,7 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import dayjs from "dayjs";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, User } from "lucide-react";
 
@@ -14,49 +14,60 @@ type Shift = {
   status: string;
 };
 
-const HOURS = Array.from({ length: 24 }, (_, i) => i);
 const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-export default function ScheduleCalendar({ scope = "all" }: { scope?: "all" | "self" }) {
+export default function ScheduleCalendar({
+  scope = "all",
+  viewerId = null,
+}: {
+  scope?: "all" | "self";
+  viewerId?: string | null;
+}) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [weekOffset, setWeekOffset] = useState(0);
   const weekStart = dayjs().startOf("week").add(weekOffset, "week");
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
+    const currentWeekStart = dayjs().startOf("week").add(weekOffset, "week");
     setLoading(true);
+    const query = new URLSearchParams({
+      scope,
+      from: currentWeekStart.toISOString(),
+      to: currentWeekStart.add(7, "day").toISOString(),
+    });
 
-    supabase.auth.getSession().then(({ data }) => {
-      const userId = data.session?.user.id ?? null;
-      const weekStart = dayjs().startOf("week").add(weekOffset, "week");
+    if (scope === "self" && !viewerId) {
+      setShifts([]);
+      setLoading(false);
+      return;
+    }
 
-      let query = supabase
-        .from("shifts")
-        .select("id, start_at, end_at, staff_id, unit_id, status")
-        .gte("start_at", weekStart.toISOString())
-        .lte("end_at", weekStart.add(7, "day").toISOString())
-        .order("start_at");
+    fetch(`/api/shifts?${query.toString()}`, { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) {
+          const payload = await response.json().catch(() => null);
+          throw new Error(payload?.error ?? "Unable to load shifts");
+        }
 
-      if (scope === "self" && userId) {
-        query = query.or(`staff_id.eq.${userId},staff_id.is.null`);
-      }
-
-      query.then(({ data, error }) => {
-        if (error) console.error(error.message);
+        return response.json();
+      })
+      .then((data: Shift[]) => {
         setShifts(data ?? []);
+      })
+      .catch((error: Error) => {
+        console.error(error.message);
+        setShifts([]);
+      })
+      .finally(() => {
         setLoading(false);
       });
-    });
-  }, [weekOffset, scope]);
+  }, [scope, viewerId, weekOffset]);
 
   const getShiftsForDay = (dayIndex: number) => {
-    const weekStart = dayjs().startOf("week").add(weekOffset, "week");
     const dayStart = weekStart.add(dayIndex, "day");
     const dayEnd = dayStart.add(1, "day");
-    return shifts.filter(
-      (s) => dayjs(s.start_at).isBefore(dayEnd) && dayjs(s.end_at).isAfter(dayStart)
-    );
+    return shifts.filter((shift) => dayjs(shift.start_at).isBefore(dayEnd) && dayjs(shift.end_at).isAfter(dayStart));
   };
 
   if (loading) {
@@ -71,26 +82,24 @@ export default function ScheduleCalendar({ scope = "all" }: { scope?: "all" | "s
 
   return (
     <div className="space-y-4">
-      {/* Week navigation */}
       <div className="flex items-center justify-between">
         <button
-          onClick={() => setWeekOffset((o) => o - 1)}
+          onClick={() => setWeekOffset((offset) => offset - 1)}
           className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
         >
-          ← Previous
+          Previous
         </button>
         <h3 className="text-sm font-semibold text-slate-800">
-          {weekStart.format("MMM D")} – {weekStart.add(6, "day").format("MMM D, YYYY")}
+          {weekStart.format("MMM D")} - {weekStart.add(6, "day").format("MMM D, YYYY")}
         </h3>
         <button
-          onClick={() => setWeekOffset((o) => o + 1)}
+          onClick={() => setWeekOffset((offset) => offset + 1)}
           className="rounded-lg border border-border px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-50"
         >
-          Next →
+          Next
         </button>
       </div>
 
-      {/* Calendar grid */}
       <div className="grid grid-cols-7 gap-2">
         {DAYS.map((day, dayIndex) => {
           const dayShifts = getShiftsForDay(dayIndex);
@@ -111,25 +120,23 @@ export default function ScheduleCalendar({ scope = "all" }: { scope?: "all" | "s
                 </p>
               </div>
               <div className="space-y-1">
-                {dayShifts.length === 0 && (
-                  <p className="text-center text-xs text-slate-400 mt-4">No shifts</p>
-                )}
+                {dayShifts.length === 0 && <p className="mt-4 text-center text-xs text-slate-400">No shifts</p>}
                 {dayShifts.map((shift) => (
                   <div
                     key={shift.id}
-                    className={`rounded-lg p-1.5 text-xs ${
+                    className={`rounded-lg border p-1.5 text-xs ${
                       shift.staff_id
-                        ? "bg-emerald-50 border border-emerald-200 text-emerald-800"
-                        : "bg-amber-50 border border-amber-200 text-amber-800"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-800"
+                        : "border-amber-200 bg-amber-50 text-amber-800"
                     }`}
                   >
                     <div className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
                       <span className="font-semibold">
-                        {dayjs(shift.start_at).format("HH:mm")}–{dayjs(shift.end_at).format("HH:mm")}
+                        {dayjs(shift.start_at).format("HH:mm")}-{dayjs(shift.end_at).format("HH:mm")}
                       </span>
                     </div>
-                    <div className="flex items-center gap-1 mt-0.5">
+                    <div className="mt-0.5 flex items-center gap-1">
                       <User className="h-3 w-3" />
                       <span>{shift.staff_id ? "Assigned" : "Open"}</span>
                     </div>

@@ -53,11 +53,19 @@ function assertCanDecideTimeOff(
   staffDepartmentId: string | null
 ) {
   if (callerRole === "admin") return;
-  if (callerRole === "manager" && callerDepartmentId && callerDepartmentId === staffDepartmentId) return;
+  if (callerRole === "manager") {
+    if (!callerDepartmentId) {
+      throw new Error("Managers must be assigned to a department before they can approve or decline time off requests.");
+    }
+    if (!staffDepartmentId) {
+      throw new Error("This staff member is not assigned to a department, so the request cannot be decided by a manager.");
+    }
+    if (callerDepartmentId === staffDepartmentId) return;
+  }
   throw new Error("Only an admin or the manager of the staff's department can approve or decline this request.");
 }
 
-export async function approveTimeOff(id: string, decidedBy: string) {
+export async function approveTimeOff(id: string) {
   const supabase = createSupabaseActionClient();
   const caller = await getCallerContext(supabase);
   if (!caller) throw new Error("Not authenticated");
@@ -79,13 +87,16 @@ export async function approveTimeOff(id: string, decidedBy: string) {
 
   const { error } = await supabase
     .from("time_off_requests")
-    .update({ status: "approved", decided_by: decidedBy } as { status: string; decided_by: string })
+    .update({ status: "approved", decided_by: caller.userId } as { status: string; decided_by: string })
     .eq("id", id as string);
   if (error) throw new Error(error.message ?? "Unable to approve request");
   revalidatePath("/timeoff");
+  revalidatePath("/my-timeoff");
+  revalidatePath("/dashboard/manager");
+  revalidatePath("/dashboard");
 }
 
-export async function declineTimeOff(id: string, decidedBy: string) {
+export async function declineTimeOff(id: string) {
   const supabase = createSupabaseActionClient();
   const caller = await getCallerContext(supabase);
   if (!caller) throw new Error("Not authenticated");
@@ -107,8 +118,11 @@ export async function declineTimeOff(id: string, decidedBy: string) {
 
   const { error } = await supabase
     .from("time_off_requests")
-    .update({ status: "declined", decided_by: decidedBy } as { status: string; decided_by: string })
+    .update({ status: "declined", decided_by: caller.userId } as { status: string; decided_by: string })
     .eq("id", id as string);
   if (error) throw new Error(error.message ?? "Unable to decline request");
   revalidatePath("/timeoff");
+  revalidatePath("/my-timeoff");
+  revalidatePath("/dashboard/manager");
+  revalidatePath("/dashboard");
 }

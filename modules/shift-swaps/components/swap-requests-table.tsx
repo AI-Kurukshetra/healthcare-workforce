@@ -107,13 +107,13 @@ export default function SwapRequestsTable({ isManager = false }: { isManager?: b
                       onClick={() => handleDecide(row.id, "approved")}
                       className="rounded-lg bg-emerald-50 p-1.5 text-emerald-600 hover:bg-emerald-100"
                     >
-                      <Check className="h-4 w-4" />
+                      <Check className="h-4 w-4 shrink-0 text-current" aria-hidden />
                     </button>
                     <button
                       onClick={() => handleDecide(row.id, "declined")}
                       className="rounded-lg bg-red-50 p-1.5 text-red-600 hover:bg-red-100"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-4 w-4 shrink-0 text-current" aria-hidden />
                     </button>
                   </div>
                 </td>

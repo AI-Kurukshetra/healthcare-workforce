@@ -42,7 +42,7 @@ export function ConfirmDialog({
           onClick={onCancel}
           className="absolute right-4 top-4 rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
         >
-          <X className="h-4 w-4" />
+          <X className="h-4 w-4 shrink-0 text-current" aria-hidden />
         </button>
         <div className="flex items-start gap-3">
           {variant === "danger" && (

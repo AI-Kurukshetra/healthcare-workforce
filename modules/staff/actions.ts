@@ -4,7 +4,6 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createSupabaseActionClient } from "@/lib/supabase/action";
 import { createClient } from "@supabase/supabase-js";
-import { Database } from "@/types/db";
 
 const contactSchema = z.object({
   staffId: z.string().uuid(),
@@ -70,6 +69,15 @@ const credentialSchema = z.object({
 });
 
 const toDateString = (value?: Date | null) => (value ? value.toISOString().slice(0, 10) : null);
+
+function createAdminSupabaseClient() {
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!serviceRoleKey) throw new Error("Service role key is missing");
+
+  return createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, serviceRoleKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+}
 
 async function getCallerContext() {
   const supabase = createSupabaseActionClient();
@@ -208,6 +216,7 @@ export async function deleteCredential(id: string, staffId?: string) {
 }
 
 export async function createStaff(data: {
+  existingUserId?: string;
   firstName: string;
   lastName: string;
   email: string;
@@ -219,6 +228,10 @@ export async function createStaff(data: {
 }) {
   const caller = await getCallerContext();
 
+  if (caller.role === "admin" && !data.existingUserId) {
+    throw new Error("Admins can add staff only from already registered users.");
+  }
+
   if (caller.role === "manager") {
     // Managers may only create staff in their department and cannot create managers/admins
     data.role = "staff";
@@ -226,28 +239,44 @@ export async function createStaff(data: {
     if (!data.departmentId) throw new Error("Managers must be assigned to a department before creating staff.");
   }
 
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) throw new Error("Service role key is missing");
-
-  // Use service role for admin auth creation
-  const adminAuthClient = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    serviceRoleKey,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const adminAuthClient = createAdminSupabaseClient();
 
   const fullName = `${data.firstName} ${data.lastName}`.trim();
+  let userId: string;
 
-  // Create auth.user
-  const { data: authData, error: authError } = await adminAuthClient.auth.admin.createUser({
-    email: data.email,
-    password: "Password123!", // Enforce secure password reset flow in production
-    email_confirm: true,
-    user_metadata: { full_name: fullName, role: data.role },
-  });
+  if (data.existingUserId) {
+    if (caller.role !== "admin") {
+      throw new Error("Only admins can attach an existing registered user to staff.");
+    }
 
-  if (authError) throw new Error(`Auth creation failed: ${authError.message}`);
-  const userId = authData.user.id;
+    const { data: existingProfile, error: existingProfileError } = await adminAuthClient
+      .from("profiles")
+      .select("id, email")
+      .eq("id", data.existingUserId)
+      .maybeSingle();
+
+    if (existingProfileError || !existingProfile) {
+      throw new Error("Selected registered user was not found.");
+    }
+
+    userId = existingProfile.id;
+    data.email = existingProfile.email;
+
+    const { error: userUpdateError } = await adminAuthClient.auth.admin.updateUserById(userId, {
+      user_metadata: { full_name: fullName, role: data.role },
+    });
+    if (userUpdateError) throw new Error(`Account update failed: ${userUpdateError.message}`);
+  } else {
+    const { data: authData, error: authError } = await adminAuthClient.auth.admin.createUser({
+      email: data.email,
+      password: "Password123!",
+      email_confirm: true,
+      user_metadata: { full_name: fullName, role: data.role },
+    });
+
+    if (authError) throw new Error(`Auth creation failed: ${authError.message}`);
+    userId = authData.user.id;
+  }
 
   // Insert Profile
   const { error: profileError } = await adminAuthClient.from("profiles").upsert({
@@ -347,4 +376,49 @@ export async function updateStaff(data: {
 
   revalidatePath(`/staff/${data.id}`);
   revalidatePath("/staff");
+}
+
+export async function setStaffActiveStatus(staffId: string, isActive: boolean) {
+  const supabase = createSupabaseActionClient();
+  const caller = await getCallerContext();
+
+  if (caller.role === "staff") {
+    throw new Error("Only managers and admins can change staff access.");
+  }
+
+  if (!isActive && caller.userId === staffId) {
+    throw new Error("You cannot deactivate your own account.");
+  }
+
+  const { data: targetProfile, error: targetError } = await supabase
+    .from("profiles")
+    .select("department_id, role")
+    .eq("id", staffId)
+    .maybeSingle();
+
+  if (targetError || !targetProfile) {
+    throw new Error("Staff member not found.");
+  }
+
+  if (caller.role === "manager") {
+    if (!caller.departmentId) {
+      throw new Error("Managers must be assigned to a department before changing staff access.");
+    }
+    if ((targetProfile as any).department_id !== caller.departmentId) {
+      throw new Error("Managers can only change access for staff in their department.");
+    }
+    if ((targetProfile as any).role !== "staff") {
+      throw new Error("Managers can only change access for staff accounts.");
+    }
+  }
+
+  const adminAuthClient = createAdminSupabaseClient();
+  const { error } = await adminAuthClient.auth.admin.updateUserById(staffId, {
+    ban_duration: isActive ? "none" : "876000h",
+  });
+
+  if (error) throw new Error(error.message ?? "Unable to update staff access.");
+
+  revalidatePath("/staff");
+  revalidatePath(`/staff/${staffId}`);
 }

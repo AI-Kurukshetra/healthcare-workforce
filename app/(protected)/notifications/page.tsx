@@ -89,7 +89,7 @@ export default function NotificationsPage() {
         actions={
           unread > 0 ? (
             <Button variant="outline" onClick={handleMarkAllRead}>
-              <CheckCheck className="mr-2 h-4 w-4" />
+              <CheckCheck className="mr-2 h-4 w-4 shrink-0 text-current" aria-hidden />
               Mark All Read
             </Button>
           ) : undefined
@@ -110,7 +110,7 @@ export default function NotificationsPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
                   <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${n.read_at ? "bg-slate-100 text-slate-400" : "bg-brand-100 text-brand-600"}`}>
-                    <Bell className="h-4 w-4" />
+                    <Bell className="h-4 w-4 shrink-0 text-current" aria-hidden />
                   </div>
                   <div>
                     <p className="text-sm font-semibold text-slate-900">{n.title}</p>
@@ -124,7 +124,7 @@ export default function NotificationsPage() {
                     className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
                     title="Mark as read"
                   >
-                    <Check className="h-4 w-4" />
+                    <Check className="h-4 w-4 shrink-0 text-current" aria-hidden />
                   </button>
                 )}
               </div>

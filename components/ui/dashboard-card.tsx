@@ -16,7 +16,7 @@ export function DashboardCard({ icon: Icon, label, value, trend, accent }: Dashb
       <div className={`absolute inset-y-0 left-0 w-1 ${accent ?? "bg-brand-500"}`} />
       <CardContent className="flex items-center gap-4 p-5">
         <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-brand-50 text-brand-600">
-          <Icon className="h-5 w-5" />
+          <Icon className="h-5 w-5 shrink-0 text-current" aria-hidden />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>

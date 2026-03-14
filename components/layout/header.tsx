@@ -70,7 +70,7 @@ export default function Header() {
           className="relative rounded-lg p-2 text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition-colors"
           aria-label="Notifications"
         >
-          <Bell className="h-5 w-5" />
+          <Bell className="h-5 w-5 shrink-0 text-current" aria-hidden />
           {unread > 0 && (
             <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
               {unread > 99 ? "99+" : unread}
@@ -99,7 +99,7 @@ export default function Header() {
           className="rounded-lg p-2 text-slate-400 hover:bg-red-50 hover:text-red-600 transition-colors"
           aria-label="Sign out"
         >
-          <LogOut className="h-4 w-4" />
+          <LogOut className="h-4 w-4 shrink-0 text-current" aria-hidden />
         </button>
       </div>
     </header>

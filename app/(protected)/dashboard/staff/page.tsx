@@ -6,8 +6,11 @@ import TimeOffForm from "@/modules/timeoff/components/timeoff-form";
 import TimeOffTable from "@/modules/timeoff/components/timeoff-table";
 import SwapRequestsTable from "@/modules/shift-swaps/components/swap-requests-table";
 import RoleGuard from "@/components/auth/role-guard";
+import { getSessionWithRole } from "@/modules/auth/queries";
 
-export default function StaffDashboard() {
+export default async function StaffDashboard() {
+  const ctx = await getSessionWithRole();
+
   return (
     <RoleGuard roles={["staff"]}>
       <div className="space-y-6">
@@ -24,7 +27,7 @@ export default function StaffDashboard() {
               <CardDescription>Your assigned shifts and open slots.</CardDescription>
             </CardHeader>
             <CardContent className="pt-0">
-              <UnitSchedule />
+              <UnitSchedule viewerId={ctx?.session.user.id ?? null} />
             </CardContent>
           </Card>
 

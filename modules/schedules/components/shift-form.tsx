@@ -111,7 +111,7 @@ export default function ShiftForm({ onSuccess }: { onSuccess?: () => void }) {
         disabled={isSubmitting}
         className="inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-brand-700 disabled:opacity-50 transition-colors"
       >
-        <CalendarPlus className="h-4 w-4" />
+        <CalendarPlus className="h-4 w-4 shrink-0 text-current" aria-hidden />
         {isSubmitting ? "Creating…" : "Create Shift"}
       </button>
     </form>

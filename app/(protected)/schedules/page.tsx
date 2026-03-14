@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import ScheduleCalendar from "@/modules/schedules/components/schedule-calendar";
 import ShiftForm from "@/modules/schedules/components/shift-form";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
 import RoleGuard from "@/components/auth/role-guard";
 
 export default function SchedulesPage() {
@@ -15,8 +14,11 @@ export default function SchedulesPage() {
           title="Schedules"
           description="Create and assign shifts, view the weekly calendar, and manage coverage."
           actions={
-            <Link href="/schedules/swaps">
-              <Button variant="outline">Swap Requests</Button>
+            <Link
+              href="/schedules/swaps"
+              className="inline-flex h-10 items-center justify-center rounded-lg border border-brand-200 px-4 py-2 text-sm font-semibold text-brand-700 transition-colors hover:bg-brand-50"
+            >
+              Swap Requests
             </Link>
           }
         />

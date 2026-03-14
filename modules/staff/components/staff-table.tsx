@@ -1,12 +1,14 @@
 "use client";
-import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
 import { DataTable } from "@/components/ui/data-table";
 import { StaffListItem } from "../types";
 import { Button } from "@/components/ui/button";
-import { Eye, Edit, UserX } from "lucide-react";
+import { Eye, Edit, UserCheck, UserX } from "lucide-react";
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { setStaffActiveStatus } from "../actions";
 
 interface StaffTableProps {
   data: StaffListItem[];
@@ -14,7 +16,8 @@ interface StaffTableProps {
 }
 
 export default function StaffTable({ data, canManage }: StaffTableProps) {
-  const [deactivateId, setDeactivateId] = useState<string | null>(null);
+  const router = useRouter();
+  const [selectedStaff, setSelectedStaff] = useState<StaffListItem | null>(null);
 
   const columns: ColumnDef<StaffListItem>[] = [
     {
@@ -56,11 +59,16 @@ export default function StaffTable({ data, canManage }: StaffTableProps) {
     {
       id: "status",
       header: "Status",
-      cell: () => (
-        <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-700">
-          Active
-        </span>
-      ),
+      cell: ({ row }) =>
+        row.original.isActive ? (
+          <span className="rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold tracking-wide text-emerald-700">
+            Active
+          </span>
+        ) : (
+          <span className="rounded-full bg-slate-200 px-3 py-1 text-xs font-semibold tracking-wide text-slate-700">
+            Inactive
+          </span>
+        ),
     },
     ...(canManage
       ? [
@@ -69,23 +77,43 @@ export default function StaffTable({ data, canManage }: StaffTableProps) {
             header: "Actions",
             cell: ({ row }: { row: { original: StaffListItem } }) => (
               <div className="flex items-center gap-2">
-                <Link href={`/staff/${row.original.id}`}>
-                  <Button variant="outline" className="h-8 w-8 p-0" title="View Profile">
-                    <Eye className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href={`/staff/edit/${row.original.id}`}>
-                  <Button variant="outline" className="h-8 w-8 p-0" title="Edit">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                </Link>
                 <Button
+                  type="button"
                   variant="outline"
-                  className="h-8 w-8 p-0 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                  title="Deactivate"
-                  onClick={() => setDeactivateId(row.original.id)}
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-slate-700 hover:text-slate-900"
+                  title="View Profile"
+                  onClick={() => router.push(`/staff/${row.original.id}`)}
                 >
-                  <UserX className="h-4 w-4" />
+                  <Eye className="h-4 w-4 shrink-0" aria-hidden />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8 shrink-0 text-slate-700 hover:text-slate-900"
+                  title="Edit"
+                  onClick={() => router.push(`/staff/edit/${row.original.id}`)}
+                >
+                  <Edit className="h-4 w-4 shrink-0" aria-hidden />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  className={`h-8 w-8 shrink-0 ${
+                    row.original.isActive
+                      ? "text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                      : "text-emerald-700 hover:bg-emerald-50 hover:text-emerald-800"
+                  }`}
+                  title={row.original.isActive ? "Deactivate" : "Reactivate"}
+                  onClick={() => setSelectedStaff(row.original)}
+                >
+                  {row.original.isActive ? (
+                    <UserX className="h-4 w-4 shrink-0" aria-hidden />
+                  ) : (
+                    <UserCheck className="h-4 w-4 shrink-0" aria-hidden />
+                  )}
                 </Button>
               </div>
             ),
@@ -102,16 +130,28 @@ export default function StaffTable({ data, canManage }: StaffTableProps) {
         searchPlaceholder="Search staff by name, email, or role..."
       />
       <ConfirmDialog
-        open={!!deactivateId}
-        onCancel={() => setDeactivateId(null)}
-        title="Deactivate Staff"
-        message="Are you sure you want to deactivate this staff member? Their access will be revoked but historical records will be preserved."
+        open={!!selectedStaff}
+        onCancel={() => setSelectedStaff(null)}
+        title={selectedStaff?.isActive ? "Deactivate Staff" : "Reactivate Staff"}
+        message={
+          selectedStaff?.isActive
+            ? "Are you sure you want to deactivate this staff member? Their access will be revoked but historical records will be preserved."
+            : "Are you sure you want to reactivate this staff member? They will be able to access the system again."
+        }
         onConfirm={async () => {
-          // TODO: implement deactivation
-          setDeactivateId(null);
+          if (!selectedStaff) return;
+
+          try {
+            await setStaffActiveStatus(selectedStaff.id, !selectedStaff.isActive);
+            toast.success(selectedStaff.isActive ? "Staff member deactivated" : "Staff member reactivated");
+            setSelectedStaff(null);
+            router.refresh();
+          } catch (error: any) {
+            toast.error(error.message || "Failed to update staff access");
+          }
         }}
-        variant="danger"
-        confirmLabel="Deactivate"
+        variant={selectedStaff?.isActive ? "danger" : "default"}
+        confirmLabel={selectedStaff?.isActive ? "Deactivate" : "Reactivate"}
       />
     </>
   );

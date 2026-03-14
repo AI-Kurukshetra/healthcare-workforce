@@ -1,5 +1,6 @@
 import { listDepartments } from "@/modules/departments/queries";
 import StaffForm from "@/modules/staff/components/staff-form";
+import { listRegisteredUserOptions } from "@/modules/staff/queries";
 import { PageHeader } from "@/components/ui/page-header";
 import RoleGuard from "@/components/auth/role-guard";
 import { getSessionWithRole } from "@/modules/auth/queries";
@@ -13,7 +14,10 @@ export default async function CreateStaffPage() {
     role === "manager" ? ["staff"] : ["staff", "manager", "admin"];
   const defaultDepartmentId = role === "manager" ? ctx?.departmentId ?? "" : "";
 
-  const departments = await listDepartments();
+  const [departments, registeredUsers] = await Promise.all([
+    listDepartments(),
+    role === "admin" ? listRegisteredUserOptions() : Promise.resolve([]),
+  ]);
 
   if (role === "manager" && !defaultDepartmentId) {
     return (
@@ -38,6 +42,8 @@ export default async function CreateStaffPage() {
           allowedRoles={allowedRoles}
           defaultDepartmentId={defaultDepartmentId}
           lockDepartment={role === "manager"}
+          availableProfiles={registeredUsers}
+          requireExistingProfile={role === "admin"}
         />
       </div>
     </RoleGuard>

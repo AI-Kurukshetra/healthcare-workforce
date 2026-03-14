@@ -1,6 +1,5 @@
 "use client";
 import { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import dayjs from "dayjs";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -14,24 +13,29 @@ type Shift = {
   unit_id: string;
 };
 
-export default function UnitSchedule() {
+export default function UnitSchedule({ viewerId = null }: { viewerId?: string | null }) {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const supabase = createSupabaseBrowserClient();
-
     const fetchShifts = async () => {
       setLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabase
-          .from("shifts")
-          .select("id, start_at, end_at, staff_id, unit_id")
-          .gte("start_at", dayjs().startOf("week").toISOString())
-          .lte("end_at", dayjs().endOf("week").toISOString());
-        if (error) throw error;
+        const params = new URLSearchParams({
+          scope: viewerId ? "self" : "all",
+          from: dayjs().startOf("week").toISOString(),
+          to: dayjs().endOf("week").toISOString(),
+        });
+
+        const response = await fetch(`/api/shifts?${params.toString()}`, { cache: "no-store" });
+        const payload = await response.json().catch(() => null);
+        if (!response.ok) {
+          throw new Error(payload?.error ?? "Unable to load schedule");
+        }
+
+        const data = Array.isArray(payload) ? payload : [];
         setShifts(data ?? []);
       } catch (err: any) {
         const message =
@@ -46,29 +50,7 @@ export default function UnitSchedule() {
     };
 
     fetchShifts();
-
-    const channel = supabase
-      .channel("shifts")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "shifts" },
-        (payload) => {
-          if (payload.eventType === "DELETE") {
-            setShifts((prev) => prev.filter((s) => s.id !== payload.old.id));
-          } else {
-            setShifts((prev) => {
-              const filtered = prev.filter((s) => s.id !== payload.new.id);
-              return [...filtered, payload.new as Shift];
-            });
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+  }, [viewerId]);
 
   if (loading) {
     return (

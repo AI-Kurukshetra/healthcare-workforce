@@ -1,15 +1,20 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import dayjs from "dayjs";
 import { getSessionWithRole } from "@/modules/auth/queries";
+import TimeOffDecisionActions from "./timeoff-decision-actions";
 
 async function loadPending() {
   try {
     const supabase = createSupabaseServerClient();
     const ctx = await getSessionWithRole();
 
+    if (ctx?.role === "manager" && !ctx.departmentId) {
+      return [];
+    }
+
     let query = supabase
       .from("time_off_requests")
-      .select("id, start_date, end_date, type, staff_id, profiles:staff_id(department_id)")
+      .select("id, start_date, end_date, type, staff_id, profiles:staff_id(full_name, department_id)")
       .eq("status", "pending")
       .order("created_at", { ascending: true })
       .limit(5);
@@ -47,10 +52,15 @@ export default async function PendingApprovals() {
         >
           <div>
             <div className="text-sm font-semibold text-slate-900 capitalize">{row.type}</div>
-            <p className="text-xs text-slate-500">Requested by: {row.staff_id}</p>
+            <p className="text-xs text-slate-500">
+              Requested by: {(row.profiles as { full_name?: string | null } | null)?.full_name ?? row.staff_id}
+            </p>
           </div>
-          <div className="text-sm font-semibold text-slate-700">
-            {dayjs(row.start_date).format("MMM D")} - {dayjs(row.end_date).format("MMM D")}
+          <div className="flex items-center gap-4">
+            <div className="text-sm font-semibold text-slate-700">
+              {dayjs(row.start_date).format("MMM D")} - {dayjs(row.end_date).format("MMM D")}
+            </div>
+            <TimeOffDecisionActions requestId={row.id} />
           </div>
         </li>
       ))}

@@ -50,3 +50,14 @@ body {
 .shadow-xs {
   box-shadow: 0 6px 12px rgba(15, 23, 42, 0.04);
 }
+
+/* Ensure action icons (e.g. Lucide) inherit text color so they stay visible */
+button svg,
+[role="button"] svg {
+  color: inherit;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
